@@ -10,22 +10,24 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import os
 
+mozilla_categories = ["us", "england", "australia", "indian", "canada", "malaysia", "ireland", "bermuda", "scotland", "african", "newzealand", "wales", "philippines", "singapore", "hongkong", "southatlandtic"]
+mozilla_categories_small  = ["us", "england", "india"]
 def clean_df(file):
     df = pd.read_csv(file)
-    #df_us = df[df['accent']=='us'].sample(16563)
-    df_us = df[df['accent']=='us']
-    df_ind = df[df['accent']=='indian']
-    #df_aus = df[df['accent']=='australia']
-    #df_uk = df[df['accent']=='england'].sample(16)
-    df_uk = df[df['accent']=='england']
-    df = df_us.append(df_ind)
-    #df = df_us.append(df_aus)
-    df = df.append(df_uk)
-    # df.drop(['client_id', 'sentence', 'up_votes', 'down_votes', 'age', 'gender'],
+    # df_us = df[df['accent']=='us']
+    # df_ind = df[df['accent']=='indian']
+    # df_eng = df[df['accent']=='england']
+    # df = df_us.append(df_ind)
+    # df = df.append(df_eng)
+    # df.drop(['text', 'up_votes', 'down_votes', 'age', 'gender', 'duration'],
     #     axis=1, inplace=True)
-    df.drop(['text', 'up_votes', 'down_votes', 'age', 'gender', 'duration'],
-        axis=1, inplace=True)
-    return df
+    # return df
+
+    output_df = pd.DataFrame()
+    for accent in mozilla_categories_small:
+        output_df = output_df.append(df[df['accent']==accent])
+    output_df.drop(['text', 'up_votes', 'down_votes', 'age', 'gender', 'duration'], axis=1, inplace=True)
+    return output_df
 
 class Mfcc():
 
@@ -102,16 +104,15 @@ class Mfcc():
 
 # 354, 293, 61
 if __name__ == '__main__':
-    #df = clean_df('../data/validated.tsv')
-    df = clean_df('../Mozilla data/validated.csv')
+    df = clean_df('../experiments_data/mozilla/validated.csv')
     print("DF created")
-    #mfcc = Mfcc(df, 'path')
-    mfcc = Mfcc(df, 'filename')
-    mfcc.mp3towav()
-    mfcc.create_mfcc()
-    mfcc.resize_mfcc()
-    mfcc.label_samples()
-    mfcc.split_data()
-    mfcc.standardize_mfcc()
-    # mfcc.oversample()
-    mfcc.save_mfccs()
+    print(df)
+    # mfcc = Mfcc(df, 'filename')
+    # mfcc.mp3towav()
+    # mfcc.create_mfcc()
+    # mfcc.resize_mfcc()
+    # mfcc.label_samples()
+    # mfcc.split_data()
+    # mfcc.standardize_mfcc()
+    # # mfcc.oversample()
+    # mfcc.save_mfccs()
