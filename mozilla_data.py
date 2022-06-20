@@ -11,47 +11,37 @@ from tqdm import tqdm
 import os
 
 mozilla_categories = ["us", "england", "australia", "indian", "canada", "malaysia", "ireland", "bermuda", "scotland", "african", "newzealand", "wales", "philippines", "singapore", "hongkong", "southatlandtic"]
-mozilla_categories_small  = ["us", "england", "india"]
+
 def clean_df(file):
     df = pd.read_csv(file)
-    # df_us = df[df['accent']=='us']
-    # df_ind = df[df['accent']=='indian']
-    # df_eng = df[df['accent']=='england']
-    # df = df_us.append(df_ind)
-    # df = df.append(df_eng)
-    # df.drop(['text', 'up_votes', 'down_votes', 'age', 'gender', 'duration'],
-    #     axis=1, inplace=True)
-    # return df
-
     output_df = pd.DataFrame()
     for accent in mozilla_categories_small:
-        output_df = output_df.append(df[df['accent']==accent])
+        output_df = pd.concat([output_df, df[df['accent']==accent]], ignore_index=True)
     output_df.drop(['text', 'up_votes', 'down_votes', 'age', 'gender', 'duration'], axis=1, inplace=True)
     return output_df
 
 class Mfcc():
 
-    def __init__(self, df, col):
+    def __init__(self, df, col, accent):
         self.df = df
         self.col = col
+        self.accent = accent
 
     def mp3towav(self):
-        uk = self.df[self.df['accent']=='england']
-        for filename in tqdm(uk[self.col]):
-            #pydub.AudioSegment.from_mp3("../data/clips/{}.mp3".format(filename)).export("../data/clips/wav/{}.wav".format(filename), format="wav")
-            pydub.AudioSegment.from_mp3(f"../Mozilla data/clips/{filename}.mp3").export(f"../Mozilla data/clips/wav/{filename}.wav", format="wav")
+        accent_df = self.df[self.df['accent']==self.accent]
+        for filename in tqdm(accent_df[self.col]):
+            pydub.AudioSegment.from_mp3(f"../experiments_data/mozilla/org_mp3/{filename}.mp3").export(f"../experiments_data/mozilla/wavs/{filename}.wav", format="wav")
 
     def wavtomfcc(self, file_path):
-        wave, sr = librosa.load(file_path, mono=True)
+        wave, sr = librosa.load(file_path, mono=True, sr=None)
         mfcc = librosa.feature.mfcc(wave, sr=sr, n_mfcc=13)
         return mfcc
 
     def create_mfcc(self):
         list_of_mfccs = []
-        uk = self.df[self.df['accent']=='england']
-        for wav in tqdm(uk[self.col]):
-            #file_name = '../data/clips/wav/{}.wav'.format(wav)
-            file_name = f'../Mozilla data/clips/wav/{wav}.wav'
+        accent_df = self.df[self.df['accent']==self.accent]
+        for wav in tqdm(accent_df[self.col]):
+            file_name = f'../experiments_data/mozilla/wavs/{wav}.wav'
             mfcc = self.wavtomfcc(file_name)
             list_of_mfccs.append(mfcc)
         self.list_of_mfccs = list_of_mfccs
@@ -64,14 +54,14 @@ class Mfcc():
         self.X = resized_mfcc
 
     def label_samples(self):
-        uk = self.df[self.df['accent']=='england']
-        y_labels = np.array(uk['accent'])
-        y = np.where(y_labels=='england', 2, 0)
+        accent_df = self.df[self.df['accent']==self.accent]
+        y_labels = np.array(accent_df['accent'])
+        y = np.where(y_labels==self.accent, 2, 0)
         self.y = y
 
     def split_data(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.25)
-        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.3)
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.35)
+        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.30)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
         self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
@@ -95,24 +85,29 @@ class Mfcc():
         self.y_train = np.vstack((self.y_train, np.ones(232).reshape(-1,1)))
 
     def save_mfccs(self):
-        np.save('X_train_moz_uk.npy', self.X_train_std)
-        np.save('X_test_moz_uk.npy', self.X_test_std)
-        np.save('X_val_moz_uk.npy', self.X_val_std)
-        np.save('y_train_moz_uk.npy', self.y_train)
-        np.save('y_test_moz_uk.npy', self.y_test)
-        np.save('y_val_moz_uk.npy', self.y_val)
+        np.save(f'X_train_moz_{self.accent}.npy', self.X_train_std)
+        np.save(f'X_test_moz_{self.accent}.npy', self.X_test_std)
+        np.save(f'X_val_moz_{self.accent}.npy', self.X_val_std)
+        np.save(f'y_train_moz_{self.accent}.npy', self.y_train)
+        np.save(f'y_test_moz_{self.accent}.npy', self.y_test)
+        np.save(f'y_val_moz_{self.accent}.npy', self.y_val)
+
+
+mozilla_categories_small  = ["indian"]
 
 # 354, 293, 61
 if __name__ == '__main__':
     df = clean_df('../experiments_data/mozilla/validated.csv')
     print("DF created")
-    print(df)
-    # mfcc = Mfcc(df, 'filename')
-    # mfcc.mp3towav()
-    # mfcc.create_mfcc()
-    # mfcc.resize_mfcc()
-    # mfcc.label_samples()
-    # mfcc.split_data()
-    # mfcc.standardize_mfcc()
-    # # mfcc.oversample()
-    # mfcc.save_mfccs()
+    print(len(df))
+    #print(df)
+    for accent in mozilla_categories_small:
+        mfcc = Mfcc(df, 'filename', accent)
+        mfcc.mp3towav()
+        mfcc.create_mfcc()
+        mfcc.resize_mfcc()
+        mfcc.label_samples()
+        mfcc.split_data()
+        mfcc.standardize_mfcc()
+        # mfcc.oversample()
+        mfcc.save_mfccs()
