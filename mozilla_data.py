@@ -85,15 +85,24 @@ class Mfcc():
         self.y_train = np.vstack((self.y_train, np.ones(232).reshape(-1,1)))
 
     def save_mfccs(self):
-        np.save(f'../experiments_data/mozilla/mfccs/X_train_moz_{self.accent}.npy', self.X_train_std)
-        np.save(f'../experiments_data/mozilla/mfccs/X_test_moz_{self.accent}.npy', self.X_test_std)
-        np.save(f'../experiments_data/mozilla/mfccs/X_val_moz_{self.accent}.npy', self.X_val_std)
-        np.save(f'../experiments_data/mozilla/mfccs/y_train_moz_{self.accent}.npy', self.y_train)
-        np.save(f'../experiments_data/mozilla/mfccs/y_test_moz_{self.accent}.npy', self.y_test)
-        np.save(f'../experiments_data/mozilla/mfccs/y_val_moz_{self.accent}.npy', self.y_val)
+        # np.save(f'../experiments_data/mozilla/mfccs/X_train_moz_{self.accent}.npy', self.X_train_std)
+        # np.save(f'../experiments_data/mozilla/mfccs/X_test_moz_{self.accent}.npy', self.X_test_std)
+        # np.save(f'../experiments_data/mozilla/mfccs/X_val_moz_{self.accent}.npy', self.X_val_std)
+        # np.save(f'../experiments_data/mozilla/mfccs/y_train_moz_{self.accent}.npy', self.y_train)
+        # np.save(f'../experiments_data/mozilla/mfccs/y_test_moz_{self.accent}.npy', self.y_test)
+        # np.save(f'../experiments_data/mozilla/mfccs/y_val_moz_{self.accent}.npy', self.y_val)
+        mfccs[self.accent] = {
+            "x_train": self.X_train_std,
+            "x_test": self.X_test_std,
+            "x_val": self.X_val_std,
+            "y_train": self.y_train,
+            "y_test": self.y_test,
+            "y_val": self.y_val
+        }
 
 
 mozilla_categories_small  = ["us", "england", "indian"]
+mfccs = {}
 
 # 354, 293, 61
 if __name__ == '__main__':
@@ -111,3 +120,25 @@ if __name__ == '__main__':
         mfcc.standardize_mfcc()
         # mfcc.oversample()
         mfcc.save_mfccs()
+
+    X_train_std = mfccs[mozilla_categories_small[0]]["x_train"]
+    X_test_std = mfccs[mozilla_categories_small[0]]["x_test"]
+    X_val_std = mfccs[mozilla_categories_small[0]]["x_val"]
+    y_train = mfccs[mozilla_categories_small[0]]["y_train"]
+    y_test = mfccs[mozilla_categories_small[0]]["y_test"]
+    y_val = mfccs[mozilla_categories_small[0]]["y_val"]
+
+    for accent in mozilla_categories_small[1:]:
+        X_train_std = np.concatenate((X_train_std, mfccs[accent]["x_train"]))
+        X_test_std = np.concatenate((X_test_std, mfccs[accent]["x_test"]))
+        X_val_std = np.concatenate((X_val_std, mfccs[accent]["x_val"]))
+        y_train = np.concatenate((y_train, mfccs[accent]["y_train"]))
+        y_test = np.concatenate((y_test, mfccs[accent]["y_test"]))
+        y_val = np.concatenate((y_val, mfccs[accent]["y_val"]))
+
+    np.save(f'../experiments_data/mozilla/mfccs/X_train_moz.npy', X_train_std)
+    np.save(f'../experiments_data/mozilla/mfccs/X_test_moz.npy', X_test_std)
+    np.save(f'../experiments_data/mozilla/mfccs/X_val_moz.npy', X_val_std)
+    np.save(f'../experiments_data/mozilla/mfccs/y_train_moz.npy', y_train)
+    np.save(f'../experiments_data/mozilla/mfccs/y_test_moz.npy', y_test)
+    np.save(f'../experiments_data/mozilla/mfccs/y_val_moz.npy', y_val)
