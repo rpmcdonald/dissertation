@@ -90,7 +90,7 @@ plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 
 plt.savefig('binary_plots_newest')
-plt.show();
+plt.show()
 
 # what really optimized my model: smaller learning rate, larger number of epochs,
 #
