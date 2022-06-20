@@ -85,15 +85,15 @@ class Mfcc():
         self.y_train = np.vstack((self.y_train, np.ones(232).reshape(-1,1)))
 
     def save_mfccs(self):
-        np.save(f'X_train_moz_{self.accent}.npy', self.X_train_std)
-        np.save(f'X_test_moz_{self.accent}.npy', self.X_test_std)
-        np.save(f'X_val_moz_{self.accent}.npy', self.X_val_std)
-        np.save(f'y_train_moz_{self.accent}.npy', self.y_train)
-        np.save(f'y_test_moz_{self.accent}.npy', self.y_test)
-        np.save(f'y_val_moz_{self.accent}.npy', self.y_val)
+        np.save(f'../experiments_data/mozilla/mfccs/X_train_moz_{self.accent}.npy', self.X_train_std)
+        np.save(f'../experiments_data/mozilla/mfccs/X_test_moz_{self.accent}.npy', self.X_test_std)
+        np.save(f'../experiments_data/mozilla/mfccs/X_val_moz_{self.accent}.npy', self.X_val_std)
+        np.save(f'../experiments_data/mozilla/mfccs/y_train_moz_{self.accent}.npy', self.y_train)
+        np.save(f'../experiments_data/mozilla/mfccs/y_test_moz_{self.accent}.npy', self.y_test)
+        np.save(f'../experiments_data/mozilla/mfccs/y_val_moz_{self.accent}.npy', self.y_val)
 
 
-mozilla_categories_small  = ["indian"]
+mozilla_categories_small  = ["us", "england", "indian"]
 
 # 354, 293, 61
 if __name__ == '__main__':
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     #print(df)
     for accent in mozilla_categories_small:
         mfcc = Mfcc(df, 'filename', accent)
-        mfcc.mp3towav()
+        # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
