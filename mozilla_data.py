@@ -34,7 +34,7 @@ class Mfcc():
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
-        mfcc = librosa.feature.mfcc(wave, sr=sr, n_mfcc=13)
+        mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13)
         return mfcc
 
     def create_mfcc(self):
@@ -58,6 +58,8 @@ class Mfcc():
         y_labels = np.array(accent_df['accent'])
         y = np.where(y_labels==self.accent, mozilla_categories_small.index(self.accent), 0)
         self.y = y
+        print(self.y)
+        print(self.y.shape)
 
     def split_data(self):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)

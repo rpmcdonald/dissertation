@@ -12,42 +12,37 @@ import os
 
 class Mfcc():
 
-    def __init__(self, df, col, accent):
-        self.df = df
-        self.col = col
-        self.accent = accent
-
-    def mp3towav(self):
-        accent_df = self.df[self.df['accent']==self.accent]
-        for filename in tqdm(accent_df[self.col]):
-            pydub.AudioSegment.from_mp3(f"../experiments_data/mozilla/org_mp3/{filename}.mp3").export(f"../experiments_data/mozilla/wavs/{filename}.wav", format="wav")
+    def __init__(self, folder):
+        self.folder = folder
+        self.accent = folder[:2]
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
-        mfcc = librosa.feature.mfcc(wave, sr=sr, n_mfcc=13)
+        mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13)
         return mfcc
 
     def create_mfcc(self):
         list_of_mfccs = []
-        accent_df = self.df[self.df['accent']==self.accent]
-        for wav in tqdm(accent_df[self.col]):
-            file_name = f'../experiments_data/mozilla/wavs/{wav}.wav'
+        wavs = []
+        for file in os.listdir(f"..\experiments_data\openslr_83\{self.folder}"):
+            if file.endswith(".wav"):
+                wavs.append(file)
+        
+        for wav in tqdm(wavs):
+            file_name = f"..\experiments_data\openslr_83\{self.folder}\{wav}"
             mfcc = self.wavtomfcc(file_name)
             list_of_mfccs.append(mfcc)
         self.list_of_mfccs = list_of_mfccs
 
     def resize_mfcc(self):
         self.target_size = 64
-        resized_mfcc = [librosa.util.fix_length(mfcc, self.target_size, axis=1)
+        resized_mfcc = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
                          for mfcc in self.list_of_mfccs]
         resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
         self.X = resized_mfcc
 
     def label_samples(self):
-        accent_df = self.df[self.df['accent']==self.accent]
-        y_labels = np.array(accent_df['accent'])
-        y = np.where(y_labels==self.accent, mozilla_categories_small.index(self.accent), 0)
-        self.y = y
+        self.y = np.full(shape=len(self.X), fill_value=ACCENTS[self.accent], dtype=int)
 
     def split_data(self):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
@@ -81,7 +76,7 @@ class Mfcc():
         # np.save(f'../experiments_data/mozilla/mfccs/y_train_moz_{self.accent}.npy', self.y_train)
         # np.save(f'../experiments_data/mozilla/mfccs/y_test_moz_{self.accent}.npy', self.y_test)
         # np.save(f'../experiments_data/mozilla/mfccs/y_val_moz_{self.accent}.npy', self.y_val)
-        mfccs[self.accent] = {
+        MFCCS[self.accent] = {
             "x_train": self.X_train_std,
             "x_test": self.X_test_std,
             "x_val": self.X_val_std,
@@ -94,8 +89,20 @@ class Mfcc():
 
 
 if __name__ == '__main__':
-    accents = {"we": "welsh", "ir": "irish", "mi": "midlands", "no": "northern", "sc": "scottish", "so": "southern"}
-    mfccs = {}
+    ACCENTS = {"we": 0, "ir": 1, "mi": 2, "no": 3, "sc": 4, "so": 5}
+    MFCCS = {}
     folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
-    for f in folders:
-        pass
+    for f in folders[0:3]:
+        print(f)
+        if f[-6:] == "female": # update this to be nicer but works for now
+            continue
+        mfcc = Mfcc(f)
+        mfcc.create_mfcc()
+        mfcc.resize_mfcc()
+        mfcc.label_samples()
+        mfcc.split_data()
+        mfcc.standardize_mfcc()
+        # mfcc.oversample()
+        mfcc.save_mfccs()
+
+    print(MFCCS.keys())
