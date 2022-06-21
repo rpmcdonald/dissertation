@@ -56,7 +56,7 @@ class Mfcc():
     def label_samples(self):
         accent_df = self.df[self.df['accent']==self.accent]
         y_labels = np.array(accent_df['accent'])
-        y = np.where(y_labels==self.accent, 2, 0)
+        y = np.where(y_labels==self.accent, mozilla_categories_small.index(self.accent), 0)
         self.y = y
 
     def split_data(self):
