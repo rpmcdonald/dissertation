@@ -11,7 +11,6 @@ y_train = np.load('mfccs/y_train_moz.npy')
 y_test = np.load('mfccs/y_test_moz.npy')
 y_val = np.load('mfccs/y_val_moz.npy')
 
-#model = KNeighborsClassifier(n_neighbors=3)
 
 grid_params = {
     'n_neighbors': [3, 4, 5, 6, 7, 8, 9, 10, 11, 15],

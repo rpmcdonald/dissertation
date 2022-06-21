@@ -60,8 +60,8 @@ class Mfcc():
         self.y = y
 
     def split_data(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.35)
-        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.30)
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
+        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.15)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
         self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
