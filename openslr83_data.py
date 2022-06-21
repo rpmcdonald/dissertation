@@ -92,7 +92,7 @@ if __name__ == '__main__':
     ACCENTS = {"we": 0, "ir": 1, "mi": 2, "no": 3, "sc": 4, "so": 5}
     MFCCS = {}
     folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
-    for f in folders[0:3]:
+    for f in folders:
         print(f)
         if f[-6:] == "female": # update this to be nicer but works for now
             continue
@@ -105,4 +105,26 @@ if __name__ == '__main__':
         # mfcc.oversample()
         mfcc.save_mfccs()
 
-    print(MFCCS.keys())
+    keys = list(MFCCS.keys())
+
+    X_train_std = MFCCS[keys[0]]["x_train"]
+    X_test_std = MFCCS[keys[0]]["x_test"]
+    X_val_std = MFCCS[keys[0]]["x_val"]
+    y_train = MFCCS[keys[0]]["y_train"]
+    y_test = MFCCS[keys[0]]["y_test"]
+    y_val = MFCCS[keys[0]]["y_val"]
+
+    for k in keys[1:]:
+        X_train_std = np.concatenate((X_train_std, MFCCS[k]["x_train"]))
+        X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
+        X_val_std = np.concatenate((X_val_std, MFCCS[k]["x_val"]))
+        y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
+        y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
+        y_val = np.concatenate((y_val, MFCCS[k]["y_val"]))
+
+    np.save(f'mfccs/X_train_openslr83.npy', X_train_std)
+    np.save(f'mfccs/X_test_openslr83.npy', X_test_std)
+    np.save(f'mfccs/X_val_openslr83.npy', X_val_std)
+    np.save(f'mfccs/y_train_openslr83.npy', y_train)
+    np.save(f'mfccs/y_test_openslr83.npy', y_test)
+    np.save(f'mfccs/y_val_openslr83.npy', y_val)
