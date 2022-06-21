@@ -14,15 +14,24 @@ y_val = np.load('mfccs/y_val_moz.npy')
 #model = KNeighborsClassifier(n_neighbors=3)
 
 grid_params = {
-    'n_neighbors': [3, 5, 7, 9, 11, 15],
+    'n_neighbors': [3, 4, 5, 6, 7, 8, 9, 10, 11, 15],
     'weights': ['uniform', 'distance'],
     'metric': ['euclidean', 'manhattan']
 }
-print(y_train.shape)
-print(y_train)
+y_train = np.ravel(y_train)
+#print(y_train.shape)
+
 nsamples, nx, ny, _ = X_train.shape
-print(nsamples)
-d2_train_dataset = X_train.reshape((nsamples,nx*ny))
-print(d2_train_dataset.shape)
+X_train_reshape = X_train.reshape((nsamples,nx*ny))
+
+#print(X_train_reshape.shape)
 model = GridSearchCV(KNeighborsClassifier(), grid_params, cv=5, n_jobs=-1)
-#model.fit(d2_train_dataset,y_train)
+model.fit(X_train_reshape,y_train)
+
+nsamples, nx, ny, _ = X_test.shape
+X_test_reshape = X_test.reshape((nsamples,nx*ny))
+
+y_predict = model.predict(X_test_reshape)
+y_test = np.ravel(y_test)
+print(f'Model Score: {model.score(X_test_reshape, y_test)}')
+print(f'Confusion Matrix: \n{confusion_matrix(y_predict, y_test)}')
