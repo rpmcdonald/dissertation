@@ -1,7 +1,8 @@
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
+import matplotlib.pyplot as plt
 
 length = 64
 X_train = np.load('mfccs/X_train_moz.npy').reshape(-1, 16, length, 1)
@@ -13,7 +14,7 @@ y_val = np.load('mfccs/y_val_moz.npy')
 
 
 grid_params = {
-    'n_neighbors': [3, 4, 5, 6, 7, 8, 9, 10, 11, 15],
+    'n_neighbors': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
     'weights': ['uniform', 'distance'],
     'metric': ['euclidean', 'manhattan']
 }
@@ -33,4 +34,9 @@ X_test_reshape = X_test.reshape((nsamples,nx*ny))
 y_predict = model.predict(X_test_reshape)
 y_test = np.ravel(y_test)
 print(f'Model Score: {model.score(X_test_reshape, y_test)}')
-print(f'Confusion Matrix: \n{confusion_matrix(y_predict, y_test)}')
+cm = confusion_matrix(y_predict, y_test)
+print(f'Confusion Matrix: \n{cm}')
+
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+disp.plot()
+plt.show()
