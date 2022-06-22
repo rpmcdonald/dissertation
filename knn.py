@@ -39,6 +39,11 @@ print(f'Model Score: {model.score(X_test_reshape, y_test)}')
 cm = confusion_matrix(y_test, y_predict)
 print(f'Confusion Matrix: \n{cm}')
 
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+if data == "openslr83":
+    labels = ["we", "mi", "no", "sc", "so"]
+else:
+    labels = model.classes_
+
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
 disp.plot()
 plt.show()
