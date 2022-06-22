@@ -48,7 +48,7 @@ class Mfcc():
         self.y = np.full(shape=len(self.X), fill_value=ACCENTS[self.accent], dtype=int)
 
     def split_data(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.25)
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
         X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.25)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
@@ -90,10 +90,12 @@ if __name__ == '__main__':
     MFCCS = {}
     folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
     for f in folders:
-        print(f)
-        if f[-6:] == "female": # update this to be nicer but works for now
+        if f == "indv":
             continue
-        mfcc = Mfcc(f, limit=450)
+        print(f)
+        # if f[-6:] == "female": # update this to be nicer but works for now
+        #     continue
+        mfcc = Mfcc(f, limit=-1)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
