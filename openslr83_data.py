@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import os
 import random
+import sys
 
 class Mfcc():
 
@@ -21,7 +22,7 @@ class Mfcc():
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
-        mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13)
+        mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13) # format is (n_mfcc, )
         return mfcc
 
     def create_mfcc(self):
@@ -39,10 +40,16 @@ class Mfcc():
         self.list_of_mfccs = list_of_mfccs
 
     def resize_mfcc(self):
+        print(len(self.list_of_mfccs), self.list_of_mfccs[0].shape)
+        #print(len(self.list_of_mfccs[0]), len(self.list_of_mfccs[0][0])) # Number of MFCCS, number data points each has (num of dims, amount of data)
+        #print(self.list_of_mfccs[0])
         resized_mfcc = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
                          for mfcc in self.list_of_mfccs]
+        print(resized_mfcc[0].shape)
         resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
+        print(resized_mfcc[0].shape)
         self.X = resized_mfcc
+        #sys.exit("Error message")
 
     def label_samples(self):
         self.y = np.full(shape=len(self.X), fill_value=ACCENTS[self.accent], dtype=int)
@@ -53,8 +60,11 @@ class Mfcc():
         # X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
         # X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.25)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
+        print(self.X_train.shape)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
+        print(self.X_test.shape)
         self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
+        print(self.X_val.shape)
         self.y_train = np.array(y_train).reshape(-1, 1)
         self.y_test = np.array(y_test).reshape(-1,1)
         self.y_val = np.array(y_val).reshape(-1,1)
@@ -98,7 +108,7 @@ if __name__ == '__main__':
         print(f)
         # if f[-6:] == "female": # update this to be nicer but works for now
         #     continue
-        mfcc = Mfcc(f, limit=650)
+        mfcc = Mfcc(f, limit=20)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
