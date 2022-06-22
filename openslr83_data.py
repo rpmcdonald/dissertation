@@ -17,6 +17,7 @@ class Mfcc():
         self.folder = folder
         self.accent = folder[:2]
         self.limit = limit
+        self.target_size = 64
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
@@ -38,7 +39,6 @@ class Mfcc():
         self.list_of_mfccs = list_of_mfccs
 
     def resize_mfcc(self):
-        self.target_size = 64
         resized_mfcc = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
                          for mfcc in self.list_of_mfccs]
         resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
