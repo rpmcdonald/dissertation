@@ -40,9 +40,7 @@ class Mfcc():
         self.list_of_mfccs = list_of_mfccs
 
     def resize_mfcc(self):
-        print(len(self.list_of_mfccs), self.list_of_mfccs[0].shape)
-        #print(len(self.list_of_mfccs[0]), len(self.list_of_mfccs[0][0])) # Number of MFCCS, number data points each has (num of dims, amount of data)
-        #print(self.list_of_mfccs[0])
+        print(len(self.list_of_mfccs), self.list_of_mfccs[0].shape) # Number of MFCCS, number data points each has (num of dims, amount of data)
         resized_mfcc = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
                          for mfcc in self.list_of_mfccs]
         print(resized_mfcc[0].shape)
@@ -56,25 +54,24 @@ class Mfcc():
 
     def split_data(self):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=0.15)
-        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=0.25)
+        #X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=0.25)
         # X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
         # X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.25)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
         print(self.X_train.shape)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
         print(self.X_test.shape)
-        self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
-        print(self.X_val.shape)
+        #self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
         self.y_train = np.array(y_train).reshape(-1, 1)
         self.y_test = np.array(y_test).reshape(-1,1)
-        self.y_val = np.array(y_val).reshape(-1,1)
+        #self.y_val = np.array(y_val).reshape(-1,1)
 
     def standardize_mfcc(self):
         train_mean = self.X_train.mean()
         train_std = self.X_train.std()
         self.X_train_std = (self.X_train-train_mean)/train_std
         self.X_test_std = (self.X_test-train_mean)/train_std
-        self.X_val_std = (self.X_val-train_mean)/train_std
+        #self.X_val_std = (self.X_val-train_mean)/train_std
 
     def oversample(self):
         temp = pd.DataFrame({'mfcc_id':range(self.X_train_std.shape[0]), 'accent':self.y_train.reshape(-1)})
@@ -88,10 +85,10 @@ class Mfcc():
         MFCCS[self.accent] = {
             "x_train": self.X_train_std,
             "x_test": self.X_test_std,
-            "x_val": self.X_val_std,
+            #"x_val": self.X_val_std,
             "y_train": self.y_train,
             "y_test": self.y_test,
-            "y_val": self.y_val
+            #"y_val": self.y_val
         }
 
 
@@ -108,7 +105,7 @@ if __name__ == '__main__':
         print(f)
         # if f[-6:] == "female": # update this to be nicer but works for now
         #     continue
-        mfcc = Mfcc(f, limit=20)
+        mfcc = Mfcc(f, limit=650)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
@@ -121,22 +118,22 @@ if __name__ == '__main__':
 
     X_train_std = MFCCS[keys[0]]["x_train"]
     X_test_std = MFCCS[keys[0]]["x_test"]
-    X_val_std = MFCCS[keys[0]]["x_val"]
+    #X_val_std = MFCCS[keys[0]]["x_val"]
     y_train = MFCCS[keys[0]]["y_train"]
     y_test = MFCCS[keys[0]]["y_test"]
-    y_val = MFCCS[keys[0]]["y_val"]
+    #y_val = MFCCS[keys[0]]["y_val"]
 
     for k in keys[1:]:
         X_train_std = np.concatenate((X_train_std, MFCCS[k]["x_train"]))
         X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
-        X_val_std = np.concatenate((X_val_std, MFCCS[k]["x_val"]))
+        #X_val_std = np.concatenate((X_val_std, MFCCS[k]["x_val"]))
         y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
-        y_val = np.concatenate((y_val, MFCCS[k]["y_val"]))
+        #y_val = np.concatenate((y_val, MFCCS[k]["y_val"]))
 
     np.save(f'mfccs/X_train_openslr83.npy', X_train_std)
     np.save(f'mfccs/X_test_openslr83.npy', X_test_std)
-    np.save(f'mfccs/X_val_openslr83.npy', X_val_std)
+    #np.save(f'mfccs/X_val_openslr83.npy', X_val_std)
     np.save(f'mfccs/y_train_openslr83.npy', y_train)
     np.save(f'mfccs/y_test_openslr83.npy', y_test)
-    np.save(f'mfccs/y_val_openslr83.npy', y_val)
+    #np.save(f'mfccs/y_val_openslr83.npy', y_val)

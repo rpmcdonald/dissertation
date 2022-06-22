@@ -10,22 +10,22 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import os
 
-mozilla_categories = ["us", "england", "australia", "indian", "canada", "malaysia", "ireland", "bermuda", "scotland", "african", "newzealand", "wales", "philippines", "singapore", "hongkong", "southatlandtic"]
 
 def clean_df(file):
     df = pd.read_csv(file)
     output_df = pd.DataFrame()
-    for accent in mozilla_categories_small:
+    for accent in mozilla_categories:
         output_df = pd.concat([output_df, df[df['accent']==accent]], ignore_index=True)
     output_df.drop(['text', 'up_votes', 'down_votes', 'age', 'gender', 'duration'], axis=1, inplace=True)
     return output_df
 
 class Mfcc():
 
-    def __init__(self, df, col, accent):
+    def __init__(self, df, col, accent, limit):
         self.df = df
         self.col = col
         self.accent = accent
+        self.limit = limit
 
     def mp3towav(self):
         accent_df = self.df[self.df['accent']==self.accent]
@@ -56,27 +56,25 @@ class Mfcc():
     def label_samples(self):
         accent_df = self.df[self.df['accent']==self.accent]
         y_labels = np.array(accent_df['accent'])
-        y = np.where(y_labels==self.accent, mozilla_categories_small.index(self.accent), 0)
+        y = np.where(y_labels==self.accent, mozilla_categories.index(self.accent), 0)
         self.y = y
-        print(self.y)
-        print(self.y.shape)
 
     def split_data(self):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
-        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.15)
+        #X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.15)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
-        self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
+        #self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
         self.y_train = np.array(y_train).reshape(-1, 1)
         self.y_test = np.array(y_test).reshape(-1,1)
-        self.y_val = np.array(y_val).reshape(-1,1)
+        #self.y_val = np.array(y_val).reshape(-1,1)
 
     def standardize_mfcc(self):
         train_mean = self.X_train.mean()
         train_std = self.X_train.std()
         self.X_train_std = (self.X_train-train_mean)/train_std
         self.X_test_std = (self.X_test-train_mean)/train_std
-        self.X_val_std = (self.X_val-train_mean)/train_std
+        #self.X_val_std = (self.X_val-train_mean)/train_std
 
     def oversample(self):
         temp = pd.DataFrame({'mfcc_id':range(self.X_train_std.shape[0]), 'accent':self.y_train.reshape(-1)})
@@ -96,14 +94,16 @@ class Mfcc():
         mfccs[self.accent] = {
             "x_train": self.X_train_std,
             "x_test": self.X_test_std,
-            "x_val": self.X_val_std,
+            #"x_val": self.X_val_std,
             "y_train": self.y_train,
             "y_test": self.y_test,
-            "y_val": self.y_val
+            #"y_val": self.y_val
         }
 
 
-mozilla_categories_small  = ["us", "england", "indian"]
+mozilla_categories = ["us", "england", "australia", "indian", "canada", "malaysia", "ireland", "bermuda", "scotland", "african", "newzealand", "wales", "philippines", "singapore", "hongkong", "southatlandtic"]
+mozilla_categories  = ["us", "england", "indian", "canada", "australia"]
+
 mfccs = {}
 
 # 354, 293, 61
@@ -112,8 +112,9 @@ if __name__ == '__main__':
     print("DF created")
     print(len(df))
     #print(df)
-    for accent in mozilla_categories_small:
-        mfcc = Mfcc(df, 'filename', accent)
+    
+    for accent in mozilla_categories:
+        mfcc = Mfcc(df, 'filename', accent, limit=-1)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
@@ -123,24 +124,24 @@ if __name__ == '__main__':
         # mfcc.oversample()
         mfcc.save_mfccs()
 
-    X_train_std = mfccs[mozilla_categories_small[0]]["x_train"]
-    X_test_std = mfccs[mozilla_categories_small[0]]["x_test"]
-    X_val_std = mfccs[mozilla_categories_small[0]]["x_val"]
-    y_train = mfccs[mozilla_categories_small[0]]["y_train"]
-    y_test = mfccs[mozilla_categories_small[0]]["y_test"]
-    y_val = mfccs[mozilla_categories_small[0]]["y_val"]
+    X_train_std = mfccs[mozilla_categories[0]]["x_train"]
+    X_test_std = mfccs[mozilla_categories[0]]["x_test"]
+    #X_val_std = mfccs[mozilla_categories_small[0]]["x_val"]
+    y_train = mfccs[mozilla_categories[0]]["y_train"]
+    y_test = mfccs[mozilla_categories[0]]["y_test"]
+    #y_val = mfccs[mozilla_categories_small[0]]["y_val"]
 
-    for accent in mozilla_categories_small[1:]:
+    for accent in mozilla_categories[1:]:
         X_train_std = np.concatenate((X_train_std, mfccs[accent]["x_train"]))
         X_test_std = np.concatenate((X_test_std, mfccs[accent]["x_test"]))
-        X_val_std = np.concatenate((X_val_std, mfccs[accent]["x_val"]))
+        #X_val_std = np.concatenate((X_val_std, mfccs[accent]["x_val"]))
         y_train = np.concatenate((y_train, mfccs[accent]["y_train"]))
         y_test = np.concatenate((y_test, mfccs[accent]["y_test"]))
-        y_val = np.concatenate((y_val, mfccs[accent]["y_val"]))
+        #y_val = np.concatenate((y_val, mfccs[accent]["y_val"]))
 
     np.save(f'mfccs/X_train_moz.npy', X_train_std)
     np.save(f'mfccs/X_test_moz.npy', X_test_std)
-    np.save(f'mfccs/X_val_moz.npy', X_val_std)
+    #np.save(f'mfccs/X_val_moz.npy', X_val_std)
     np.save(f'mfccs/y_train_moz.npy', y_train)
     np.save(f'mfccs/y_test_moz.npy', y_test)
-    np.save(f'mfccs/y_val_moz.npy', y_val)
+    #np.save(f'mfccs/y_val_moz.npy', y_val)
