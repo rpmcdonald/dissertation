@@ -30,8 +30,8 @@ class Mfcc():
         for file in os.listdir(f"..\experiments_data\openslr_83\{self.folder}"):
             if file.endswith(".wav"):
                 wavs.append(file)
-
-        random.shuffle(wavs)
+        #random.seed(1)
+        random.Random(4).shuffle(wavs)
         for wav in tqdm(wavs[:self.limit]):
             file_name = f"..\experiments_data\openslr_83\{self.folder}\{wav}"
             mfcc = self.wavtomfcc(file_name)
@@ -48,8 +48,10 @@ class Mfcc():
         self.y = np.full(shape=len(self.X), fill_value=ACCENTS[self.accent], dtype=int)
 
     def split_data(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
-        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.25)
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=0.15)
+        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=0.25)
+        # X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
+        # X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.25)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
         self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
@@ -88,6 +90,7 @@ class Mfcc():
 if __name__ == '__main__':
     ACCENTS = {"we": 0, "ir": 1, "mi": 2, "no": 3, "sc": 4, "so": 5}
     MFCCS = {}
+    random.seed(1)
     folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
     for f in folders:
         if f == "indv" or f == "irish_english":
