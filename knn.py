@@ -16,7 +16,7 @@ y_val = np.load(f'mfccs/y_val_{data}.npy')
 
 
 grid_params = {
-    'n_neighbors': [3, 5, 7, 9, 11, 15],
+    'n_neighbors': [3, 4, 5, 6, 7, 8, 9, 11, 15],
     'weights': ['uniform', 'distance'],
     'metric': ['euclidean', 'manhattan']
 }
@@ -36,7 +36,7 @@ X_test_reshape = X_test.reshape((nsamples,nx*ny))
 y_predict = model.predict(X_test_reshape)
 y_test = np.ravel(y_test)
 print(f'Model Score: {model.score(X_test_reshape, y_test)}')
-cm = confusion_matrix(y_predict, y_test)
+cm = confusion_matrix(y_test, y_predict)
 print(f'Confusion Matrix: \n{cm}')
 
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)

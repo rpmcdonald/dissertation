@@ -9,12 +9,14 @@ import pydub
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import os
+import random
 
 class Mfcc():
 
-    def __init__(self, folder):
+    def __init__(self, folder, limit):
         self.folder = folder
         self.accent = folder[:2]
+        self.limit = limit
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
@@ -27,8 +29,9 @@ class Mfcc():
         for file in os.listdir(f"..\experiments_data\openslr_83\{self.folder}"):
             if file.endswith(".wav"):
                 wavs.append(file)
-        
-        for wav in tqdm(wavs):
+
+        random.shuffle(wavs)
+        for wav in tqdm(wavs[:self.limit]):
             file_name = f"..\experiments_data\openslr_83\{self.folder}\{wav}"
             mfcc = self.wavtomfcc(file_name)
             list_of_mfccs.append(mfcc)
@@ -45,8 +48,8 @@ class Mfcc():
         self.y = np.full(shape=len(self.X), fill_value=ACCENTS[self.accent], dtype=int)
 
     def split_data(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
-        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.15)
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.25)
+        X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.25)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
         self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
@@ -70,12 +73,6 @@ class Mfcc():
         self.y_train = np.vstack((self.y_train, np.ones(232).reshape(-1,1)))
 
     def save_mfccs(self):
-        # np.save(f'../experiments_data/mozilla/mfccs/X_train_moz_{self.accent}.npy', self.X_train_std)
-        # np.save(f'../experiments_data/mozilla/mfccs/X_test_moz_{self.accent}.npy', self.X_test_std)
-        # np.save(f'../experiments_data/mozilla/mfccs/X_val_moz_{self.accent}.npy', self.X_val_std)
-        # np.save(f'../experiments_data/mozilla/mfccs/y_train_moz_{self.accent}.npy', self.y_train)
-        # np.save(f'../experiments_data/mozilla/mfccs/y_test_moz_{self.accent}.npy', self.y_test)
-        # np.save(f'../experiments_data/mozilla/mfccs/y_val_moz_{self.accent}.npy', self.y_val)
         MFCCS[self.accent] = {
             "x_train": self.X_train_std,
             "x_test": self.X_test_std,
@@ -96,7 +93,7 @@ if __name__ == '__main__':
         print(f)
         if f[-6:] == "female": # update this to be nicer but works for now
             continue
-        mfcc = Mfcc(f)
+        mfcc = Mfcc(f, limit=450)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
