@@ -90,12 +90,12 @@ if __name__ == '__main__':
     MFCCS = {}
     folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
     for f in folders:
-        if f == "indv":
+        if f == "indv" or f == "irish_english":
             continue
         print(f)
         # if f[-6:] == "female": # update this to be nicer but works for now
         #     continue
-        mfcc = Mfcc(f, limit=-1)
+        mfcc = Mfcc(f, limit=650)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
