@@ -7,6 +7,7 @@ import IPython.display
 import sklearn.preprocessing
 import pydub
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
 from tqdm import tqdm
 import os
 import random
@@ -63,10 +64,10 @@ class Mfcc():
 
         combined = []
         for i in range(len(resized_mfcc)):
-            combined.append(np.concatenate((resized_mfcc[i], resized_delta[i], resized_d_delta[i])))
+            combined.append(np.concatenate((resized_mfcc[i], resized_delta[i])))
 
-        #self.X = combined
-        self.X = resized_mfcc
+        self.X = combined
+        #self.X = resized_mfcc
         #sys.exit("Error message")
 
     def label_samples(self):
@@ -93,6 +94,21 @@ class Mfcc():
         self.X_test_std = (self.X_test-train_mean)/train_std
         #self.X_val_std = (self.X_val-train_mean)/train_std
 
+    def pca(self):
+        pca = PCA(n_components=12)
+        x_train_pca = [pca.fit_transform(x) for x in self.X_train_std]
+        x_train_pca = np.array(x_train_pca).reshape(-1, 16, self.target_size)
+        self.X_train_std = x_train_pca
+
+        pca = PCA(n_components=12)
+        x_test_pca = [pca.fit_transform(x) for x in self.X_test_std]
+        x_test_pca = np.array(x_test_pca).reshape(-1, 16, self.target_size)
+        self.X_test_std = x_test_pca
+        # print(self.X_train_std.shape, principalComponents.shape)
+        # print(len(principalComponents), len(principalComponents[0]), len(principalComponents[0][0]))
+        # print(self.X_train_std[0][0][0], principalComponents[0][0][0])
+        # sys.exit("Error message")
+
     def oversample(self):
         temp = pd.DataFrame({'mfcc_id':range(self.X_train_std.shape[0]), 'accent':self.y_train.reshape(-1)})
         temp_1 = temp[temp['accent']==1]
@@ -118,7 +134,6 @@ class Mfcc():
 
 
 
-
 if __name__ == '__main__':
     ACCENTS = {"we": 0, "ir": 1, "mi": 2, "no": 3, "sc": 4, "so": 5}
     MFCCS = {}
@@ -136,6 +151,7 @@ if __name__ == '__main__':
         mfcc.label_samples()
         mfcc.split_data()
         mfcc.standardize_mfcc()
+        #mfcc.pca()
         # mfcc.oversample()
         mfcc.save_mfccs()
 
