@@ -5,16 +5,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 data = "openslr83"
-mfcc_shape = 32
+mfcc_shape = 16
 #data = "moz"
 
 length = 16
 X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length, 1)
-#X_val = np.load(f'mfccs/X_val_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 y_train = np.load(f'mfccs/y_train_{data}.npy')
 y_test = np.load(f'mfccs/y_test_{data}.npy')
-#y_val = np.load(f'mfccs/y_val_{data}.npy')
 
 
 grid_params = {
@@ -30,6 +28,7 @@ X_train_reshape = X_train.reshape((nsamples,nx*ny))
 
 #print(X_train_reshape.shape)
 model = GridSearchCV(KNeighborsClassifier(), grid_params, cv=5, n_jobs=-1, verbose=1)
+print(X_train_reshape.shape, y_train.shape)
 model.fit(X_train_reshape,y_train)
 
 nsamples, nx, ny, _ = X_test.shape
