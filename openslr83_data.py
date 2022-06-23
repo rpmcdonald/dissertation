@@ -19,7 +19,7 @@ class Mfcc():
         self.folder = folder
         self.accent = folder[:2]
         self.limit = limit
-        self.target_size = 16
+        self.target_size = 4
         self.mfcc_size = 32
 
     def wavtomfcc(self, file_path):
@@ -35,7 +35,6 @@ class Mfcc():
         for file in os.listdir(f"..\experiments_data\openslr_83\{self.folder}"):
             if file.endswith(".wav"):
                 wavs.append(file)
-        #random.seed(1)
         random.Random(4).shuffle(wavs)
         for wav in tqdm(wavs[:self.limit]):
             file_name = f"..\experiments_data\openslr_83\{self.folder}\{wav}"
@@ -75,7 +74,7 @@ class Mfcc():
         self.y = np.full(shape=len(self.X), fill_value=ACCENTS[self.accent], dtype=int)
 
     def split_data(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=0.15)
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=80)
         # X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
         self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.target_size)
         print(self.X_train.shape)
@@ -89,34 +88,10 @@ class Mfcc():
         train_std = self.X_train.std()
         self.X_train_std = (self.X_train-train_mean)/train_std
         self.X_test_std = (self.X_test-train_mean)/train_std
-        #self.X_val_std = (self.X_val-train_mean)/train_std
 
     def pca(self):
-        # test_size = len(self.X_test_std)
-        # combined = np.concatenate((self.X_train_std, self.X_test_std))
-        # pca = PCA(n_components=8)
-        # comb_pca = [pca.fit_transform(x) for x in combined]
-        # self.X_train_std = comb_pca[:-test_size]
-        # self.X_test_std = comb_pca[-test_size:]
-
-        
-        # x_train_pca = []
-        # for mfcc in self.X_train_std:
-        #     pca = PCA()
-        #     x_train_pca.append(pca.fit_transform(mfcc))
-        # x_train_pca = np.array(x_train_pca).reshape(-1, self.mfcc_size, self.target_size)
-        # self.X_train_std = x_train_pca
-
-        # x_test_pca = []
-        # for mfcc in self.X_test_std:
-        #     pca = PCA()
-        #     x_test_pca.append(pca.fit_transform(mfcc))
-        # x_test_pca = np.array(x_test_pca).reshape(-1, self.mfcc_size, self.target_size)
-        # self.X_test_std = x_test_pca
-
         pca = PCA()
 
-        #x_train_pca = [pca.fit_transform(x) for x in self.X_train_std]
         nsamples, nx, ny = self.X_train_std.shape
         X_train_reshape = self.X_train_std.reshape((nsamples,nx*ny))
         x_train_pca = pca.fit_transform(X_train_reshape)
@@ -125,17 +100,11 @@ class Mfcc():
         # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
         self.X_train_std = x_train_pca
 
-        #x_test_pca = [pca.transform(x) for x in self.X_test_std]
         nsamples, nx, ny = self.X_test_std.shape
         X_test_reshape = self.X_test_std.reshape((nsamples,nx*ny))
         x_test_pca = pca.transform(X_test_reshape)
         x_test_pca = np.array(x_test_pca).reshape(-1, self.mfcc_size, self.target_size)
         self.X_test_std = x_test_pca
-
-        # print(self.X_train_std.shape, principalComponents.shape)
-        # print(len(principalComponents), len(principalComponents[0]), len(principalComponents[0][0]))
-        # print(self.X_train_std[0][0][0], principalComponents[0][0][0])
-        # sys.exit("Error message")
 
     def save_mfccs(self):
         MFCCS[self.accent] = {
@@ -158,7 +127,7 @@ if __name__ == '__main__':
         print(f)
         # if f[-6:] == "female": # update this to be nicer but works for now
         #     continue
-        mfcc = Mfcc(f, limit=650)
+        mfcc = Mfcc(f, limit=4000)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
