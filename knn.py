@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 data = "openslr83"
-mfcc_shape = 16
+mfcc_shape = 32
 #data = "moz"
 
 length = 16

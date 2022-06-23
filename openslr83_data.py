@@ -92,21 +92,39 @@ class Mfcc():
         #self.X_val_std = (self.X_val-train_mean)/train_std
 
     def pca(self):
-        test_size = len(self.X_test_std)
+        # test_size = len(self.X_test_std)
+        # combined = np.concatenate((self.X_train_std, self.X_test_std))
+        # pca = PCA(n_components=8)
+        # comb_pca = [pca.fit_transform(x) for x in combined]
+        # self.X_train_std = comb_pca[:-test_size]
+        # self.X_test_std = comb_pca[-test_size:]
+
         
-
-
-
-        pca = PCA(n_components=8)
-        x_train_pca = [pca.fit_transform(x) for x in self.X_train_std]
-        x_train_pca = np.array(x_train_pca).reshape(-1, int(self.mfcc_size/2), self.target_size)
-        print(self.X_train_std.shape, x_train_pca.shape)
+        x_train_pca = []
+        for mfcc in self.X_train_std:
+            pca = PCA()
+            x_train_pca.append(pca.fit_transform(mfcc))
+        x_train_pca = np.array(x_train_pca).reshape(-1, self.mfcc_size, self.target_size)
         self.X_train_std = x_train_pca
 
-        pca = PCA(n_components=8)
-        x_test_pca = [pca.fit_transform(x) for x in self.X_test_std]
-        x_test_pca = np.array(x_test_pca).reshape(-1, int(self.mfcc_size/2), self.target_size)
+        x_test_pca = []
+        for mfcc in self.X_test_std:
+            pca = PCA()
+            x_test_pca.append(pca.fit_transform(mfcc))
+        x_test_pca = np.array(x_test_pca).reshape(-1, self.mfcc_size, self.target_size)
         self.X_test_std = x_test_pca
+
+        # x_train_pca = [pca.fit_transform(x) for x in self.X_train_std]
+        # x_train_pca = np.array(x_train_pca).reshape(-1, self.mfcc_size, self.target_size)
+        # print(self.X_train_std.shape, x_train_pca.shape)
+        # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
+        #self.X_train_std = x_train_pca
+
+        # pca = PCA(0.95)
+        # x_test_pca = [pca.fit_transform(x) for x in self.X_test_std]
+        # x_test_pca = np.array(x_test_pca).reshape(-1, int(self.mfcc_size/2), self.target_size)
+        # self.X_test_std = x_test_pca
+
         # print(self.X_train_std.shape, principalComponents.shape)
         # print(len(principalComponents), len(principalComponents[0]), len(principalComponents[0][0]))
         # print(self.X_train_std[0][0][0], principalComponents[0][0][0])
