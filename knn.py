@@ -5,15 +5,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 data = "openslr83"
-data = "moz"
+mfcc_shape = 16
+#data = "moz"
 
-length = 64
-X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, 16, length, 1)
-X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, 16, length, 1)
-X_val = np.load(f'mfccs/X_val_{data}.npy').reshape(-1, 16, length, 1)
+length = 16
+X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
+X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length, 1)
+#X_val = np.load(f'mfccs/X_val_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 y_train = np.load(f'mfccs/y_train_{data}.npy')
 y_test = np.load(f'mfccs/y_test_{data}.npy')
-y_val = np.load(f'mfccs/y_val_{data}.npy')
+#y_val = np.load(f'mfccs/y_val_{data}.npy')
 
 
 grid_params = {

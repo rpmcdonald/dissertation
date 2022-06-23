@@ -18,7 +18,7 @@ class Mfcc():
         self.folder = folder
         self.accent = folder[:2]
         self.limit = limit
-        self.target_size = 64
+        self.target_size = 16
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
@@ -27,6 +27,8 @@ class Mfcc():
 
     def create_mfcc(self):
         list_of_mfccs = []
+        list_of_deltas = []
+        list_of_d_deltas = []
         wavs = []
         for file in os.listdir(f"..\experiments_data\openslr_83\{self.folder}"):
             if file.endswith(".wav"):
@@ -36,16 +38,34 @@ class Mfcc():
         for wav in tqdm(wavs[:self.limit]):
             file_name = f"..\experiments_data\openslr_83\{self.folder}\{wav}"
             mfcc = self.wavtomfcc(file_name)
+            delta = librosa.feature.delta(mfcc)
+            d_delta = librosa.feature.delta(mfcc, order=2)
             list_of_mfccs.append(mfcc)
+            list_of_deltas.append(delta)
+            list_of_d_deltas.append(d_delta)
+            
         self.list_of_mfccs = list_of_mfccs
+        self.list_of_deltas = list_of_deltas
+        self.list_of_d_deltas = list_of_d_deltas
 
     def resize_mfcc(self):
-        print(len(self.list_of_mfccs), self.list_of_mfccs[0].shape) # Number of MFCCS, number data points each has (num of dims, amount of data)
         resized_mfcc = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
                          for mfcc in self.list_of_mfccs]
-        print(resized_mfcc[0].shape)
         resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
-        print(resized_mfcc[0].shape)
+
+        resized_delta = [librosa.util.fix_length(delta, size=self.target_size, axis=1)
+                         for delta in self.list_of_deltas]
+        resized_delta = [np.vstack((np.zeros((3, self.target_size)), delta)) for delta in resized_delta]
+
+        resized_d_delta = [librosa.util.fix_length(d_delta, size=self.target_size, axis=1)
+                         for d_delta in self.list_of_d_deltas]
+        resized_d_delta = [np.vstack((np.zeros((3, self.target_size)), d_delta)) for d_delta in resized_d_delta]
+
+        combined = []
+        for i in range(len(resized_mfcc)):
+            combined.append(np.concatenate((resized_mfcc[i], resized_delta[i], resized_d_delta[i])))
+
+        #self.X = combined
         self.X = resized_mfcc
         #sys.exit("Error message")
 
@@ -58,9 +78,9 @@ class Mfcc():
         # X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
         # X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.25)
         self.X_train = np.array(X_train).reshape(-1, 16, self.target_size)
-        print(self.X_train.shape)
+        #print(self.X_train.shape)
         self.X_test = np.array(X_test).reshape(-1, 16, self.target_size)
-        print(self.X_test.shape)
+        #print(self.X_test.shape)
         #self.X_val = np.array(X_val).reshape(-1, 16, self.target_size)
         self.y_train = np.array(y_train).reshape(-1, 1)
         self.y_test = np.array(y_test).reshape(-1,1)
@@ -78,8 +98,13 @@ class Mfcc():
         temp_1 = temp[temp['accent']==1]
         idx = list(temp_1['mfcc_id'])*3
         idx = idx + list(temp_1.sample(frac=.8)['mfcc_id'])
+        print("oversample")
+        print(self.X_train_std.shape)
         self.X_train_std = np.vstack((self.X_train_std, (self.X_train_std[idx]).reshape(-1, 16, self.target_size)))
+        print(self.X_train_std.shape)
+        print(self.y_train.shape)
         self.y_train = np.vstack((self.y_train, np.ones(232).reshape(-1,1)))
+        print(self.y_train.shape)
 
     def save_mfccs(self):
         MFCCS[self.accent] = {
