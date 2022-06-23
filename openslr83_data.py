@@ -92,6 +92,11 @@ class Mfcc():
         #self.X_val_std = (self.X_val-train_mean)/train_std
 
     def pca(self):
+        test_size = len(self.X_test_std)
+        
+
+
+
         pca = PCA(n_components=8)
         x_train_pca = [pca.fit_transform(x) for x in self.X_train_std]
         x_train_pca = np.array(x_train_pca).reshape(-1, int(self.mfcc_size/2), self.target_size)
