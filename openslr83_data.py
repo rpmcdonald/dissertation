@@ -15,12 +15,13 @@ import sys
 
 class Mfcc():
 
-    def __init__(self, folder, limit):
+    def __init__(self, folder, limit, test_size):
         self.folder = folder
         self.accent = folder[:2]
         self.limit = limit
         self.target_size = 4
         self.mfcc_size = 32
+        self.test_size = test_size
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
@@ -74,7 +75,7 @@ class Mfcc():
         self.y = np.full(shape=len(self.X), fill_value=ACCENTS[self.accent], dtype=int)
 
     def split_data(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=80)
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
         # X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.15)
         self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.target_size)
         print(self.X_train.shape)
@@ -111,6 +112,32 @@ class Mfcc():
         delta_pca = PCA()
 
         # Doing this totally wrong, I need to be splitting on second feature not first, currently I am breaking the whole data in half and not mfcc/delta
+        
+        x_train_mfcc = []
+        x_train_delta = []
+        for d in self.X_train_std:
+            x_train_mfcc.append(d[:16])
+            x_train_delta.append(d[16:])
+
+        print(len(x_train_mfcc), len(x_train_mfcc[0]), len(x_train_mfcc[0][0]))
+
+        x_train_mfcc = np.array(x_train_mfcc).reshape(-1, 16, self.target_size)
+        x_train_delta = np.array(x_train_delta).reshape(-1, 16, self.target_size)
+
+        nsamples, nx, ny = x_train_mfcc.shape
+        x_train_mfcc = x_train_mfcc.reshape((nsamples,nx*ny))
+        x_train_delta = x_train_delta.reshape((nsamples,nx*ny))
+
+        x_train_mfcc_pca = mfcc_pca.fit_transform(x_train_mfcc)
+        x_train_delta_pca = delta_pca.fit_transform(x_train_delta)
+
+        print(x_train_mfcc_pca.shape)
+
+        x_train_mfcc_pca = np.array(x_train_mfcc_pca).reshape(-1, 16, self.target_size)
+        x_train_delta_pca = np.array(x_train_delta_pca).reshape(-1, 16, self.target_size)
+        
+        print(x_train_mfcc_pca.shape, x_train_delta_pca.shape)
+        sys.exit("Error message")
 
         nsamples, nx, ny = self.X_train_std.shape
         X_train_std = self.X_train_std.reshape((nsamples,nx*ny))
@@ -156,8 +183,8 @@ if __name__ == '__main__':
         print(f)
         # if f[-6:] == "female": # update this to be nicer but works for now
         #     continue
-        mfcc = Mfcc(f, limit=696)
-        #mfcc = Mfcc(f, limit=100)
+        #mfcc = Mfcc(f, limit=696, test_size=80)
+        mfcc = Mfcc(f, limit=50, test_size=10)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
