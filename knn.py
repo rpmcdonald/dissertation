@@ -14,6 +14,7 @@ X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 y_train = np.load(f'mfccs/y_train_{data}.npy')
 y_test = np.load(f'mfccs/y_test_{data}.npy')
 
+print(X_train.shape, X_test.shape, len(y_train), len(y_test))
 
 grid_params = {
     'n_neighbors': list(range(1, 15)),

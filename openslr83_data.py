@@ -89,7 +89,7 @@ class Mfcc():
         self.X_train_std = (self.X_train-train_mean)/train_std
         self.X_test_std = (self.X_test-train_mean)/train_std
 
-    def pca(self):
+    def pca_v1(self):
         pca = PCA()
 
         nsamples, nx, ny = self.X_train_std.shape
@@ -103,6 +103,35 @@ class Mfcc():
         nsamples, nx, ny = self.X_test_std.shape
         X_test_reshape = self.X_test_std.reshape((nsamples,nx*ny))
         x_test_pca = pca.transform(X_test_reshape)
+        x_test_pca = np.array(x_test_pca).reshape(-1, self.mfcc_size, self.target_size)
+        self.X_test_std = x_test_pca
+
+    def pca_v2(self):
+        mfcc_pca = PCA()
+        delta_pca = PCA()
+
+        # Doing this totally wrong, I need to be splitting on second feature not first, currently I am breaking the whole data in half and not mfcc/delta
+
+        nsamples, nx, ny = self.X_train_std.shape
+        X_train_std = self.X_train_std.reshape((nsamples,nx*ny))
+        x_train_mfcc = X_train_std[:int(len(X_train_std)/2)]
+        x_train_delta = X_train_std[int(len(X_train_std)/2):]
+        x_train_mfcc_pca = mfcc_pca.fit_transform(x_train_mfcc)
+        x_train_delta_pca = delta_pca.fit_transform(x_train_delta)
+        x_train_mfcc_pca = np.array(x_train_mfcc_pca).reshape(-1, self.mfcc_size, self.target_size)
+        x_train_delta_pca = np.array(x_train_delta_pca).reshape(-1, self.mfcc_size, self.target_size)
+        x_train_pca = np.concatenate((x_train_mfcc_pca, x_train_delta_pca))
+        print(x_train_pca.shape, x_train_mfcc_pca.shape, x_train_delta_pca.shape)
+        self.X_train_std = x_train_pca
+        sys.exit("Error message")
+
+        nsamples, nx, ny = self.X_test_std.shape
+        X_test_std = self.X_test_std.reshape((nsamples,nx*ny))
+        x_test_mfcc = X_test_std[:int(len(X_test_std)/2)]
+        x_test_delta = X_test_std[int(len(X_test_std)/2):]
+        x_test_mfcc_pca = mfcc_pca.transform(x_test_mfcc)
+        x_test_delta_pca = delta_pca.transform(x_test_delta)
+        x_test_pca = x_test_mfcc_pca + x_test_delta_pca
         x_test_pca = np.array(x_test_pca).reshape(-1, self.mfcc_size, self.target_size)
         self.X_test_std = x_test_pca
 
@@ -127,13 +156,15 @@ if __name__ == '__main__':
         print(f)
         # if f[-6:] == "female": # update this to be nicer but works for now
         #     continue
-        mfcc = Mfcc(f, limit=4000)
+        mfcc = Mfcc(f, limit=696)
+        #mfcc = Mfcc(f, limit=100)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
         mfcc.split_data()
         mfcc.standardize_mfcc()
-        mfcc.pca()
+        #mfcc.pca_v1()
+        mfcc.pca_v2()
         mfcc.save_mfccs()
 
     keys = list(MFCCS.keys())
