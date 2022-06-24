@@ -13,6 +13,16 @@ import os
 import random
 import sys
 
+
+def clean_df(file):
+    df = pd.read_csv(file)
+    output_df = pd.DataFrame()
+    for accent in ACCENTS:
+        output_df = pd.concat([output_df, df[df['native_language']==accent]], ignore_index=True)
+    output_df.drop(['age', 'age_onset', 'birthplace', 'sex', 'speakerid', 'country', 'file_missing?'], axis=1, inplace=True)
+    return output_df
+
+
 class Mfcc():
 
     def __init__(self, folder, limit, test_size):
@@ -107,61 +117,6 @@ class Mfcc():
         x_test_pca = np.array(x_test_pca).reshape(-1, self.mfcc_size, self.target_size)
         self.X_test_std = x_test_pca
 
-    def pca_v2(self):
-        mfcc_pca = PCA()
-        delta_pca = PCA()
-
-        # Doing this totally wrong, I need to be splitting on second feature not first, currently I am breaking the whole data in half and not mfcc/delta
-        
-        x_train_mfcc = []
-        x_train_delta = []
-        for d in self.X_train_std:
-            x_train_mfcc.append(d[:16])
-            x_train_delta.append(d[16:])
-
-        print(len(x_train_mfcc), len(x_train_mfcc[0]), len(x_train_mfcc[0][0]))
-
-        x_train_mfcc = np.array(x_train_mfcc).reshape(-1, 16, self.target_size)
-        x_train_delta = np.array(x_train_delta).reshape(-1, 16, self.target_size)
-
-        nsamples, nx, ny = x_train_mfcc.shape
-        x_train_mfcc = x_train_mfcc.reshape((nsamples,nx*ny))
-        x_train_delta = x_train_delta.reshape((nsamples,nx*ny))
-
-        x_train_mfcc_pca = mfcc_pca.fit_transform(x_train_mfcc)
-        x_train_delta_pca = delta_pca.fit_transform(x_train_delta)
-
-        print(x_train_mfcc_pca.shape, x_train_delta_pca.shape)
-
-        x_train_mfcc_pca = np.array(x_train_mfcc_pca).reshape(-1, 16, self.target_size)
-        x_train_delta_pca = np.array(x_train_delta_pca).reshape(-1, 16, self.target_size)
-        
-        print(x_train_mfcc_pca.shape, x_train_delta_pca.shape)
-        sys.exit("Error message")
-
-        nsamples, nx, ny = self.X_train_std.shape
-        X_train_std = self.X_train_std.reshape((nsamples,nx*ny))
-        x_train_mfcc = X_train_std[:int(len(X_train_std)/2)]
-        x_train_delta = X_train_std[int(len(X_train_std)/2):]
-        x_train_mfcc_pca = mfcc_pca.fit_transform(x_train_mfcc)
-        x_train_delta_pca = delta_pca.fit_transform(x_train_delta)
-        x_train_mfcc_pca = np.array(x_train_mfcc_pca).reshape(-1, self.mfcc_size, self.target_size)
-        x_train_delta_pca = np.array(x_train_delta_pca).reshape(-1, self.mfcc_size, self.target_size)
-        x_train_pca = np.concatenate((x_train_mfcc_pca, x_train_delta_pca))
-        print(x_train_pca.shape, x_train_mfcc_pca.shape, x_train_delta_pca.shape)
-        self.X_train_std = x_train_pca
-        sys.exit("Error message")
-
-        nsamples, nx, ny = self.X_test_std.shape
-        X_test_std = self.X_test_std.reshape((nsamples,nx*ny))
-        x_test_mfcc = X_test_std[:int(len(X_test_std)/2)]
-        x_test_delta = X_test_std[int(len(X_test_std)/2):]
-        x_test_mfcc_pca = mfcc_pca.transform(x_test_mfcc)
-        x_test_delta_pca = delta_pca.transform(x_test_delta)
-        x_test_pca = x_test_mfcc_pca + x_test_delta_pca
-        x_test_pca = np.array(x_test_pca).reshape(-1, self.mfcc_size, self.target_size)
-        self.X_test_std = x_test_pca
-
     def save_mfccs(self):
         MFCCS[self.accent] = {
             "x_train": self.X_train_std,
@@ -173,41 +128,43 @@ class Mfcc():
 
 
 if __name__ == '__main__':
-    ACCENTS = {"we": 0, "ir": 1, "mi": 2, "no": 3, "sc": 4, "so": 5}
-    MFCCS = {}
-    random.seed(1)
-    folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
-    for f in folders:
-        if f == "indv" or f == "irish_english":
-            continue
-        print(f)
-        # if f[-6:] == "female": # update this to be nicer but works for now
-        #     continue
-        #mfcc = Mfcc(f, limit=696, test_size=80)
-        mfcc = Mfcc(f, limit=50, test_size=10)
-        mfcc.create_mfcc()
-        mfcc.resize_mfcc()
-        mfcc.label_samples()
-        mfcc.split_data()
-        mfcc.standardize_mfcc()
-        #mfcc.pca_v1()
-        mfcc.pca_v2()
-        mfcc.save_mfccs()
+    ACCENTS = ["english", "arabic", "spanish"]
+    df = clean_df('../experiments_data/ssa/speakers_all.csv')
+    print("DF created")
+    print(len(df))
+    print(df.head())
 
-    keys = list(MFCCS.keys())
+    # ACCENTS = {"we": 0, "ir": 1, "mi": 2, "no": 3, "sc": 4, "so": 5}
+    # MFCCS = {}
+    # random.seed(1)
+    # folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
+    # for f in folders:
+    #     if f == "indv" or f == "irish_english":
+    #         continue
+    #     print(f)
+    #     mfcc = Mfcc(f, limit=50, test_size=10)
+    #     mfcc.create_mfcc()
+    #     mfcc.resize_mfcc()
+    #     mfcc.label_samples()
+    #     mfcc.split_data()
+    #     mfcc.standardize_mfcc()
+    #     mfcc.pca_v1()
+    #     mfcc.save_mfccs()
 
-    X_train_std = MFCCS[keys[0]]["x_train"]
-    X_test_std = MFCCS[keys[0]]["x_test"]
-    y_train = MFCCS[keys[0]]["y_train"]
-    y_test = MFCCS[keys[0]]["y_test"]
+    # keys = list(MFCCS.keys())
 
-    for k in keys[1:]:
-        X_train_std = np.concatenate((X_train_std, MFCCS[k]["x_train"]))
-        X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
-        y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
-        y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
+    # X_train_std = MFCCS[keys[0]]["x_train"]
+    # X_test_std = MFCCS[keys[0]]["x_test"]
+    # y_train = MFCCS[keys[0]]["y_train"]
+    # y_test = MFCCS[keys[0]]["y_test"]
 
-    np.save(f'mfccs/X_train_openslr83.npy', X_train_std)
-    np.save(f'mfccs/X_test_openslr83.npy', X_test_std)
-    np.save(f'mfccs/y_train_openslr83.npy', y_train)
-    np.save(f'mfccs/y_test_openslr83.npy', y_test)
+    # for k in keys[1:]:
+    #     X_train_std = np.concatenate((X_train_std, MFCCS[k]["x_train"]))
+    #     X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
+    #     y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
+    #     y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
+
+    # np.save(f'mfccs/X_train_openslr83.npy', X_train_std)
+    # np.save(f'mfccs/X_test_openslr83.npy', X_test_std)
+    # np.save(f'mfccs/y_train_openslr83.npy', y_train)
+    # np.save(f'mfccs/y_test_openslr83.npy', y_test)
