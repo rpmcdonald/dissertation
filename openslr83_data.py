@@ -190,8 +190,8 @@ if __name__ == '__main__':
         mfcc.label_samples()
         mfcc.split_data()
         mfcc.standardize_mfcc()
-        #mfcc.pca_v1()
-        mfcc.pca_v2()
+        mfcc.pca_v1()
+        #mfcc.pca_v2()
         mfcc.save_mfccs()
 
     keys = list(MFCCS.keys())

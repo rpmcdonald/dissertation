@@ -20,18 +20,26 @@ def clean_df(file):
     for accent in ACCENTS:
         output_df = pd.concat([output_df, df[df['native_language']==accent]], ignore_index=True)
     output_df.drop(['age', 'age_onset', 'birthplace', 'sex', 'speakerid', 'country', 'file_missing?'], axis=1, inplace=True)
+    output_df.rename(columns={"native_language": "accent"}, inplace=True)
     return output_df
 
 
 class Mfcc():
 
-    def __init__(self, folder, limit, test_size):
-        self.folder = folder
-        self.accent = folder[:2]
+    def __init__(self, df, accent, limit, test_size):
+        self.df = df
+        self.accent = accent
+        self.col = "filename"
         self.limit = limit
         self.target_size = 4
         self.mfcc_size = 32
         self.test_size = test_size
+
+    def mp3towav(self):
+        print(accent)
+        accent_df = self.df[self.df['accent']==self.accent]
+        for filename in tqdm(accent_df[self.col]):
+            pydub.AudioSegment.from_mp3(f"../experiments_data/ssa/recordings/{filename}.mp3").export(f"../experiments_data/ssa/wavs/{self.accent}/{filename}.wav", format="wav")
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
@@ -43,12 +51,12 @@ class Mfcc():
         list_of_deltas = []
         list_of_d_deltas = []
         wavs = []
-        for file in os.listdir(f"..\experiments_data\openslr_83\{self.folder}"):
+        for file in os.listdir(f"..\experiments_data\ssa\wavs\{self.accent}"):
             if file.endswith(".wav"):
                 wavs.append(file)
         random.Random(4).shuffle(wavs)
         for wav in tqdm(wavs[:self.limit]):
-            file_name = f"..\experiments_data\openslr_83\{self.folder}\{wav}"
+            file_name = f"..\experiments_data\ssa\wavs\{self.accent}\{wav}"
             mfcc = self.wavtomfcc(file_name)
             delta = librosa.feature.delta(mfcc)
             d_delta = librosa.feature.delta(mfcc, order=2)
@@ -82,7 +90,7 @@ class Mfcc():
         #sys.exit("Error message")
 
     def label_samples(self):
-        self.y = np.full(shape=len(self.X), fill_value=ACCENTS[self.accent], dtype=int)
+        self.y = np.full(shape=len(self.X), fill_value=ACCENTS.index(self.accent), dtype=int)
 
     def split_data(self):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
@@ -103,9 +111,11 @@ class Mfcc():
     def pca_v1(self):
         pca = PCA()
 
+        print(self.X_train_std.shape)
         nsamples, nx, ny = self.X_train_std.shape
         X_train_reshape = self.X_train_std.reshape((nsamples,nx*ny))
         x_train_pca = pca.fit_transform(X_train_reshape)
+        print(x_train_pca.shape)
         x_train_pca = np.array(x_train_pca).reshape(-1, self.mfcc_size, self.target_size)
         # print(self.X_train_std.shape, x_train_pca.shape)
         # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
@@ -131,40 +141,34 @@ if __name__ == '__main__':
     ACCENTS = ["english", "arabic", "spanish"]
     df = clean_df('../experiments_data/ssa/speakers_all.csv')
     print("DF created")
-    print(len(df))
-    print(df.head())
 
-    # ACCENTS = {"we": 0, "ir": 1, "mi": 2, "no": 3, "sc": 4, "so": 5}
-    # MFCCS = {}
-    # random.seed(1)
-    # folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
-    # for f in folders:
-    #     if f == "indv" or f == "irish_english":
-    #         continue
-    #     print(f)
-    #     mfcc = Mfcc(f, limit=50, test_size=10)
-    #     mfcc.create_mfcc()
-    #     mfcc.resize_mfcc()
-    #     mfcc.label_samples()
-    #     mfcc.split_data()
-    #     mfcc.standardize_mfcc()
-    #     mfcc.pca_v1()
-    #     mfcc.save_mfccs()
+    MFCCS = {}
+    random.seed(1)
+    for accent in ACCENTS:
+        mfcc = Mfcc(df=df, accent=accent, limit=60, test_size=10)
+        # mfcc.mp3towav()
+        mfcc.create_mfcc()
+        mfcc.resize_mfcc()
+        mfcc.label_samples()
+        mfcc.split_data()
+        mfcc.standardize_mfcc()
+        #mfcc.pca_v1()
+        mfcc.save_mfccs()
 
-    # keys = list(MFCCS.keys())
+    keys = list(MFCCS.keys())
 
-    # X_train_std = MFCCS[keys[0]]["x_train"]
-    # X_test_std = MFCCS[keys[0]]["x_test"]
-    # y_train = MFCCS[keys[0]]["y_train"]
-    # y_test = MFCCS[keys[0]]["y_test"]
+    X_train_std = MFCCS[keys[0]]["x_train"]
+    X_test_std = MFCCS[keys[0]]["x_test"]
+    y_train = MFCCS[keys[0]]["y_train"]
+    y_test = MFCCS[keys[0]]["y_test"]
 
-    # for k in keys[1:]:
-    #     X_train_std = np.concatenate((X_train_std, MFCCS[k]["x_train"]))
-    #     X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
-    #     y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
-    #     y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
+    for k in keys[1:]:
+        X_train_std = np.concatenate((X_train_std, MFCCS[k]["x_train"]))
+        X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
+        y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
+        y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
 
-    # np.save(f'mfccs/X_train_openslr83.npy', X_train_std)
-    # np.save(f'mfccs/X_test_openslr83.npy', X_test_std)
-    # np.save(f'mfccs/y_train_openslr83.npy', y_train)
-    # np.save(f'mfccs/y_test_openslr83.npy', y_test)
+    np.save(f'mfccs/X_train_ssa.npy', X_train_std)
+    np.save(f'mfccs/X_test_ssa.npy', X_test_std)
+    np.save(f'mfccs/y_train_ssa.npy', y_train)
+    np.save(f'mfccs/y_test_ssa.npy', y_test)
