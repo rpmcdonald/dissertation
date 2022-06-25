@@ -31,8 +31,8 @@ class Mfcc():
         self.accent = accent
         self.col = "filename"
         self.limit = limit
-        self.target_size = 4
-        self.mfcc_size = 32
+        self.target_size = 8
+        self.mfcc_size = 26
         self.test_size = test_size
 
     def mp3towav(self):
@@ -54,7 +54,7 @@ class Mfcc():
         for file in os.listdir(f"..\experiments_data\ssa\wavs\{self.accent}"):
             if file.endswith(".wav"):
                 wavs.append(file)
-        random.Random(4).shuffle(wavs)
+        random.shuffle(wavs)
         for wav in tqdm(wavs[:self.limit]):
             file_name = f"..\experiments_data\ssa\wavs\{self.accent}\{wav}"
             mfcc = self.wavtomfcc(file_name)
@@ -71,11 +71,11 @@ class Mfcc():
     def resize_mfcc(self):
         resized_mfcc = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
                          for mfcc in self.list_of_mfccs]
-        resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
+        #resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
 
         resized_delta = [librosa.util.fix_length(delta, size=self.target_size, axis=1)
                          for delta in self.list_of_deltas]
-        resized_delta = [np.vstack((np.zeros((3, self.target_size)), delta)) for delta in resized_delta]
+        #resized_delta = [np.vstack((np.zeros((3, self.target_size)), delta)) for delta in resized_delta]
 
         resized_d_delta = [librosa.util.fix_length(d_delta, size=self.target_size, axis=1)
                          for d_delta in self.list_of_d_deltas]
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     MFCCS = {}
     random.seed(1)
     for accent in ACCENTS:
-        mfcc = Mfcc(df=df, accent=accent, limit=60, test_size=10)
+        mfcc = Mfcc(df=df, accent=accent, limit=20, test_size=10)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
@@ -167,6 +167,9 @@ if __name__ == '__main__':
         X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
         y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
+
+    print(X_train_std[0][7])
+    print(X_train_std[0][22])
 
     np.save(f'mfccs/X_train_ssa.npy', X_train_std)
     np.save(f'mfccs/X_test_ssa.npy', X_test_std)

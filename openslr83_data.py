@@ -209,12 +209,15 @@ if __name__ == '__main__':
         y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
 
-    pca = PCA()
+    # If you do not put in a n_components it will give target_size*mfcc_size
+    n_components = int((target_size*mfcc_size))
+    pca = PCA(n_components=n_components)
 
     nsamples, nx, ny = X_train_std.shape
     X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
     x_train_pca = pca.fit_transform(X_train_reshape)
-    x_train_pca = np.array(x_train_pca).reshape(-1, 32, 4)
+    print(X_train_std.shape, x_train_pca.shape)
+    x_train_pca = np.array(x_train_pca).reshape(-1, mfcc_size, int(target_size))
     # print(self.X_train_std.shape, x_train_pca.shape)
     # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
     X_train_std = x_train_pca
@@ -222,7 +225,7 @@ if __name__ == '__main__':
     nsamples, nx, ny = X_test_std.shape
     X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
     x_test_pca = pca.transform(X_test_reshape)
-    x_test_pca = np.array(x_test_pca).reshape(-1, 32, 4)
+    x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, int(target_size))
     X_test_std = x_test_pca
 
     np.save(f'mfccs/X_train_openslr83.npy', X_train_std)
