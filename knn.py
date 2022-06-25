@@ -4,8 +4,8 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
 import matplotlib.pyplot as plt
 
-#data = "openslr83"
-data = "ssa"
+data = "openslr83"
+#data = "ssa"
 #data = "moz"
 mfcc_shape = 32
 length = 4

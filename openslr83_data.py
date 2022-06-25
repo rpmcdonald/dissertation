@@ -15,12 +15,12 @@ import sys
 
 class Mfcc():
 
-    def __init__(self, folder, limit, test_size):
+    def __init__(self, folder, limit, mfcc_size, target_size, test_size):
         self.folder = folder
         self.accent = folder[:2]
         self.limit = limit
-        self.target_size = 4
-        self.mfcc_size = 32
+        self.target_size = target_size
+        self.mfcc_size = mfcc_size
         self.test_size = test_size
 
     def wavtomfcc(self, file_path):
@@ -175,6 +175,8 @@ class Mfcc():
 if __name__ == '__main__':
     ACCENTS = {"we": 0, "ir": 1, "mi": 2, "no": 3, "sc": 4, "so": 5}
     MFCCS = {}
+    target_size = 4
+    mfcc_size = 32
     random.seed(1)
     folders = [f.name for f in os.scandir("..\experiments_data\openslr_83") if f.is_dir()]
     for f in folders:
@@ -184,13 +186,13 @@ if __name__ == '__main__':
         # if f[-6:] == "female": # update this to be nicer but works for now
         #     continue
         #mfcc = Mfcc(f, limit=696, test_size=80)
-        mfcc = Mfcc(f, limit=50, test_size=10)
+        mfcc = Mfcc(f, mfcc_size=mfcc_size, target_size=target_size, limit=650, test_size=98)
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
         mfcc.split_data()
         mfcc.standardize_mfcc()
-        mfcc.pca_v1()
+        #mfcc.pca_v1()
         #mfcc.pca_v2()
         mfcc.save_mfccs()
 
@@ -206,6 +208,22 @@ if __name__ == '__main__':
         X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
         y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
+
+    pca = PCA()
+
+    nsamples, nx, ny = X_train_std.shape
+    X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
+    x_train_pca = pca.fit_transform(X_train_reshape)
+    x_train_pca = np.array(x_train_pca).reshape(-1, 32, 4)
+    # print(self.X_train_std.shape, x_train_pca.shape)
+    # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
+    X_train_std = x_train_pca
+
+    nsamples, nx, ny = X_test_std.shape
+    X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
+    x_test_pca = pca.transform(X_test_reshape)
+    x_test_pca = np.array(x_test_pca).reshape(-1, 32, 4)
+    X_test_std = x_test_pca
 
     np.save(f'mfccs/X_train_openslr83.npy', X_train_std)
     np.save(f'mfccs/X_test_openslr83.npy', X_test_std)
