@@ -85,13 +85,13 @@ class Mfcc():
                          for mfcc in self.list_of_mfccs]
         print(resized_mfcc[0].shape, resized_mfcc[0][0][0], resized_mfcc[0][0][-1])
         # Second part adds in 3 arrays of zeros to the start of the mfcc
-        # resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
+        resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
         # print(resized_mfcc[0].shape, resized_mfcc[0][0][0], resized_mfcc[0][3][0], resized_mfcc[0][0][-1])
         
         
         resized_delta = [librosa.util.fix_length(delta, size=self.target_size, axis=1)
                          for delta in self.list_of_deltas]
-        #resized_delta = [np.vstack((np.zeros((3, self.target_size)), delta)) for delta in resized_delta]
+        resized_delta = [np.vstack((np.zeros((3, self.target_size)), delta)) for delta in resized_delta]
 
         # resized_d_delta = [librosa.util.fix_length(d_delta, size=self.target_size, axis=1)
         #                  for d_delta in self.list_of_d_deltas]
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     MFCCS = {}
     #random.seed(1)
     target_size=128
-    mfcc_size=26
+    mfcc_size=32
     run_pca = True
 
     for accent in ACCENTS:
@@ -181,11 +181,10 @@ if __name__ == '__main__':
         #n_components = 10
         #pca = PCA(n_components=n_components)
         pca = PCA()
-        pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
 
         nsamples, nx, ny = X_train_std.shape
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
-        x_train_pca = pipe.fit_transform(X_train_reshape)
+        x_train_pca = pca.fit_transform(X_train_reshape)
         print(X_train_std.shape, x_train_pca.shape)
         #x_train_pca = np.array(x_train_pca).reshape(-1, mfcc_size, target_size)
         # print(self.X_train_std.shape, x_train_pca.shape)
@@ -194,7 +193,7 @@ if __name__ == '__main__':
 
         nsamples, nx, ny = X_test_std.shape
         X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
-        x_test_pca = pipe.transform(X_test_reshape)
+        x_test_pca = pca.transform(X_test_reshape)
         #x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, target_size)
         X_test_std = x_test_pca
 
