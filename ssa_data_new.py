@@ -26,13 +26,13 @@ def clean_df(file):
 
 class Mfcc():
 
-    def __init__(self, df, accent, limit, test_size):
+    def __init__(self, df, accent, limit, test_size, mfcc_size, target_size):
         self.df = df
         self.accent = accent
         self.col = "filename"
         self.limit = limit
-        self.target_size = 8
-        self.mfcc_size = 26
+        self.target_size = target_size
+        self.mfcc_size = mfcc_size
         self.test_size = test_size
 
     def mp3towav(self):
@@ -43,8 +43,15 @@ class Mfcc():
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
-        mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13) # format is (n_mfcc, )
-        return mfcc
+        n_fft=2048
+        hop_length=512
+        win_length=hop_length*4
+        # This is the same as not changing anything
+        mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13, win_length=win_length, hop_length=hop_length, n_fft=n_fft) # format is (n_mfcc, )
+        delta = librosa.feature.delta(mfcc)
+        d_delta = librosa.feature.delta(mfcc, order=2)
+        #print(mfcc.shape)
+        return mfcc, delta, d_delta
 
     def create_mfcc(self):
         list_of_mfccs = []
@@ -55,11 +62,11 @@ class Mfcc():
             if file.endswith(".wav"):
                 wavs.append(file)
         random.shuffle(wavs)
-        for wav in tqdm(wavs[:self.limit]):
+        #for wav in tqdm(wavs[:self.limit]):
+        for wav in wavs[:self.limit]:
             file_name = f"..\experiments_data\ssa\wavs\{self.accent}\{wav}"
-            mfcc = self.wavtomfcc(file_name)
-            delta = librosa.feature.delta(mfcc)
-            d_delta = librosa.feature.delta(mfcc, order=2)
+            mfcc, delta, d_delta = self.wavtomfcc(file_name)
+
             list_of_mfccs.append(mfcc)
             list_of_deltas.append(delta)
             list_of_d_deltas.append(d_delta)
@@ -68,10 +75,50 @@ class Mfcc():
         self.list_of_deltas = list_of_deltas
         self.list_of_d_deltas = list_of_d_deltas
 
+        print(self.list_of_mfccs[0].shape, self.list_of_mfccs[0][0][0])
+
+    def resize_mfcc(self):
+        # First part sets the length of all mfccs to the target_size and cuts off all data after that
+        resized_mfcc = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
+                         for mfcc in self.list_of_mfccs]
+        print(resized_mfcc[0].shape, resized_mfcc[0][0][0], resized_mfcc[0][0][-1])
+        # Second part adds in 3 arrays of zeros to the start of the mfcc
+        # resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
+        # print(resized_mfcc[0].shape, resized_mfcc[0][0][0], resized_mfcc[0][3][0], resized_mfcc[0][0][-1])
+        
+        
+        # resized_delta = [librosa.util.fix_length(delta, size=self.target_size, axis=1)
+        #                  for delta in self.list_of_deltas]
+        # resized_delta = [np.vstack((np.zeros((3, self.target_size)), delta)) for delta in resized_delta]
+
+        # resized_d_delta = [librosa.util.fix_length(d_delta, size=self.target_size, axis=1)
+        #                  for d_delta in self.list_of_d_deltas]
+        # resized_d_delta = [np.vstack((np.zeros((3, self.target_size)), d_delta)) for d_delta in resized_d_delta]
+
+        # combined = []
+        # for i in range(len(resized_mfcc)):
+        #     combined.append(np.concatenate((resized_mfcc[i], resized_delta[i])))
+
+        # self.X = combined
+        self.X = resized_mfcc
+        #sys.exit("Error message")
+
+    def label_samples(self):
+        self.y = np.full(shape=len(self.X), fill_value=ACCENTS.index(self.accent), dtype=int)
+
+    def split_data(self):
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
+        self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.target_size)
+        print(self.X_train.shape)
+        self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.target_size)
+        print(self.X_test.shape)
+        self.y_train = np.array(y_train).reshape(-1, 1)
+        self.y_test = np.array(y_test).reshape(-1,1)
+
     def save_mfccs(self):
         MFCCS[self.accent] = {
-            "x_train": self.X_train_std,
-            "x_test": self.X_test_std,
+            "x_train": self.X_train,
+            "x_test": self.X_test,
             "y_train": self.y_train,
             "y_test": self.y_test,
         }
@@ -86,26 +133,41 @@ if __name__ == '__main__':
     MFCCS = {}
     random.seed(1)
     for accent in ACCENTS:
-        mfcc = Mfcc(df=df, accent=accent, limit=20, test_size=10)
+        print(accent)
+        mfcc = Mfcc(df=df, accent=accent, limit=60, test_size=10, target_size=128, mfcc_size=13)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
+        mfcc.resize_mfcc()
+        mfcc.label_samples()
+        mfcc.split_data()
+        #mfcc.standardize_mfcc()
         mfcc.save_mfccs()
 
     keys = list(MFCCS.keys())
 
-    X_train_std = MFCCS[keys[0]]["x_train"]
-    X_test_std = MFCCS[keys[0]]["x_test"]
+    X_train = MFCCS[keys[0]]["x_train"]
+    X_test = MFCCS[keys[0]]["x_test"]
     y_train = MFCCS[keys[0]]["y_train"]
     y_test = MFCCS[keys[0]]["y_test"]
 
     for k in keys[1:]:
-        X_train_std = np.concatenate((X_train_std, MFCCS[k]["x_train"]))
-        X_test_std = np.concatenate((X_test_std, MFCCS[k]["x_test"]))
+        X_train = np.concatenate((X_train, MFCCS[k]["x_train"]))
+        X_test = np.concatenate((X_test, MFCCS[k]["x_test"]))
         y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
 
-    print(X_train_std[0][7])
-    print(X_train_std[0][22])
+    # Standardise
+    train_mean = X_train.mean()
+    train_std = X_train.std()
+    X_train_std = (X_train-train_mean)/train_std
+    X_test_std = (X_test-train_mean)/train_std
+    print(X_train_std[0].shape, X_train_std[0][0][0], X_train_std[0][0][-1])
+    print(X_train[0][3])
+    print(X_train_std[0][3])
+    #sys.exit("Error message")
+
+    # print(X_train_std[0][7])
+    # print(X_train_std[0][22])
 
     np.save(f'mfccs/X_train_ssa.npy', X_train_std)
     np.save(f'mfccs/X_test_ssa.npy', X_test_std)

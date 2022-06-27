@@ -4,11 +4,11 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = "openslr83"
-#data = "ssa"
+#data = "openslr83"
+data = "ssa"
 #data = "moz"
-mfcc_shape = 32
-length = 4
+mfcc_shape = 13
+length = 128
 
 X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length, 1)
