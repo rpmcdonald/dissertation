@@ -189,18 +189,15 @@ if __name__ == '__main__':
         #x_train_pca = np.array(x_train_pca).reshape(-1, mfcc_size, target_size)
         # print(self.X_train_std.shape, x_train_pca.shape)
         # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
-        X_train_std = x_train_pca
+        #X_train_std = x_train_pca
 
         nsamples, nx, ny = X_test_std.shape
         X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
         x_test_pca = pca.transform(X_test_reshape)
         #x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, target_size)
-        X_test_std = x_test_pca
+        #X_test_std = x_test_pca
 
     plt.scatter(x_train_pca[:,0], x_train_pca[:,1], c=y_train)
-    plt.show()
-
-    plt.scatter(X_train_std[:,0], X_train_std[:,1], c=y_train)
     plt.show()
 
 
