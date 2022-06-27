@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 #data = "openslr83"
 data = "ssa"
 #data = "moz"
-mfcc_shape = 13
+mfcc_shape = 26
 length = 128
 
 X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
@@ -46,7 +46,8 @@ print(f'Confusion Matrix: \n{cm}')
 if data == "openslr83":
     labels = ["we", "mi", "no", "sc", "so"]
 if data == "ssa":
-    labels = ["eng", "ara", "spa"]
+    #labels = ["usa", "ch", "uk", "ind", "can", "kor"]
+    labels = ["usa", "ch"]
 else:
     labels = model.classes_
 
