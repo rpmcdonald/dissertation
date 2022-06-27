@@ -1,3 +1,4 @@
+from turtle import color
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -198,7 +199,9 @@ if __name__ == '__main__':
         #x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, target_size)
         #X_test_std = x_test_pca
 
-    plt.scatter(x_train_pca[:,0], x_train_pca[:,1], c=y_train)
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
     plt.show()
 
 
