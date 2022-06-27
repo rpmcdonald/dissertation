@@ -21,9 +21,9 @@ def clean_df(file):
     df = pd.read_csv(file)
     output_df = pd.DataFrame()
     for accent in ACCENTS:
-        output_df = pd.concat([output_df, df[df['country']==accent]], ignore_index=True)
-    output_df.drop(['age', 'age_onset', 'birthplace', 'sex', 'speakerid', 'native_language', 'file_missing?'], axis=1, inplace=True)
-    output_df.rename(columns={"country": "accent"}, inplace=True)
+        output_df = pd.concat([output_df, df[(df['country']==accent[0]) & (df['native_language']==accent[1])]], ignore_index=True)
+    output_df.drop(['age', 'age_onset', 'birthplace', 'sex', 'speakerid', 'file_missing?'], axis=1, inplace=True)
+    #output_df.rename(columns={"country": "accent"}, inplace=True)
     return output_df
 
 
@@ -39,9 +39,9 @@ class Mfcc():
         self.test_size = test_size
 
     def mp3towav(self):
-        accent_df = self.df[self.df['accent']==self.accent]
+        accent_df = self.df[(self.df['country']==self.accent[0]) & (self.df['native_language']==self.accent[1])]
         for filename in tqdm(accent_df[self.col]):
-            pydub.AudioSegment.from_mp3(f"../experiments_data/ssa/recordings/{filename}.mp3").export(f"../experiments_data/ssa/wavs/{self.accent}/{filename}.wav", format="wav")
+            pydub.AudioSegment.from_mp3(f"../experiments_data/ssa/recordings/{filename}.mp3").export(f"../experiments_data/ssa/wavs/{self.accent[0]}_{self.accent[1]}/{filename}.wav", format="wav")
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
@@ -60,13 +60,13 @@ class Mfcc():
         list_of_deltas = []
         list_of_d_deltas = []
         wavs = []
-        for file in os.listdir(f"..\experiments_data\ssa\wavs\{self.accent}"):
+        for file in os.listdir(f"..\experiments_data\ssa\wavs\{self.accent[0]}_{self.accent[1]}"):
             if file.endswith(".wav"):
                 wavs.append(file)
         random.shuffle(wavs)
         #for wav in tqdm(wavs[:self.limit]):
         for wav in wavs[:self.limit]:
-            file_name = f"..\experiments_data\ssa\wavs\{self.accent}\{wav}"
+            file_name = f"..\experiments_data\ssa\wavs\{self.accent[0]}_{self.accent[1]}\{wav}"
             mfcc, delta, d_delta = self.wavtomfcc(file_name)
 
             list_of_mfccs.append(mfcc)
@@ -119,7 +119,7 @@ class Mfcc():
         self.y_test = np.array(y_test).reshape(-1,1)
 
     def save_mfccs(self):
-        MFCCS[self.accent] = {
+        MFCCS[self.accent[0]] = {
             "x_train": self.X_train,
             "x_test": self.X_test,
             "y_train": self.y_train,
@@ -130,7 +130,8 @@ class Mfcc():
 
 if __name__ == '__main__':
     #ACCENTS = ["usa", "china", "uk", "india", "canada", "south korea"]
-    ACCENTS = ["usa", "china", "india"]
+    #ACCENTS = ["usa", "china", "india"]
+    ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"]]
     df = clean_df('../experiments_data/ssa/speakers_all.csv')
     print("DF created")
 
@@ -142,7 +143,7 @@ if __name__ == '__main__':
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, accent=accent, limit=50, test_size=10, target_size=target_size, mfcc_size=mfcc_size)
+        mfcc = Mfcc(df=df, accent=accent, limit=50, test_size=8, target_size=target_size, mfcc_size=mfcc_size)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
