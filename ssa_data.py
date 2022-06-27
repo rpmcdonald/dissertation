@@ -32,7 +32,7 @@ class Mfcc():
         self.col = "filename"
         self.limit = limit
         self.target_size = 8
-        self.mfcc_size = 26
+        self.mfcc_size = 32
         self.test_size = test_size
 
     def mp3towav(self):
