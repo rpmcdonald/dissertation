@@ -137,20 +137,19 @@ if __name__ == '__main__':
     print("DF created")
 
     MFCCS = {}
-    #random.seed(1)
+    random.seed(1)
     target_size=128
     mfcc_size=32
     run_pca = True
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, accent=accent, limit=50, test_size=8, target_size=target_size, mfcc_size=mfcc_size)
+        mfcc = Mfcc(df=df, accent=accent, limit=50, test_size=7, target_size=target_size, mfcc_size=mfcc_size)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
         mfcc.label_samples()
         mfcc.split_data()
-        #mfcc.standardize_mfcc()
         mfcc.save_mfccs()
 
     keys = list(MFCCS.keys())
@@ -180,24 +179,44 @@ if __name__ == '__main__':
     # PCA
     if run_pca == True:
         # n_components = int((target_size*mfcc_size))     # If you do not put in a n_components it will give target_size*mfcc_size, this maybe isnt true
-        #n_components = 10
-        #pca = PCA(n_components=n_components)
-        pca = PCA()
+        n_components = 32
+        pca = PCA(n_components=n_components)
+        #pca = PCA()
+        pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
+
+        print("in PCA")
+
+        # nsamples, nx, ny = X_train_std.shape
+        # X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
+
+        # print(X_train_reshape.shape)
+
+        # x_train_pca = []
+        # for f in X_train_std:
+        #     x_train_pca.append(pipe.fit_transform(f))
+        
+        # x_test_pca = []
+        # for f in X_test_std:
+        #     x_test_pca.append(pipe.fit_transform(f))
+
+        # print(len(x_train_pca), len(x_train_pca[0]), len(x_train_pca[1]))
+
+        # ----
 
         nsamples, nx, ny = X_train_std.shape
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
-        x_train_pca = pca.fit_transform(X_train_reshape)
+        x_train_pca = pipe.fit_transform(X_train_reshape)
         print(X_train_std.shape, x_train_pca.shape)
         #x_train_pca = np.array(x_train_pca).reshape(-1, mfcc_size, target_size)
         # print(self.X_train_std.shape, x_train_pca.shape)
         # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
-        #X_train_std = x_train_pca
+        X_train_std = x_train_pca
 
         nsamples, nx, ny = X_test_std.shape
         X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
-        x_test_pca = pca.transform(X_test_reshape)
+        x_test_pca = pipe.transform(X_test_reshape)
         #x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, target_size)
-        #X_test_std = x_test_pca
+        X_test_std = x_test_pca
 
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
