@@ -130,7 +130,7 @@ class Mfcc():
 
 if __name__ == '__main__':
     #ACCENTS = ["usa", "china", "uk", "india", "canada", "south korea"]
-    ACCENTS = ["usa", "china", "uk"]
+    ACCENTS = ["usa", "china", "india"]
     df = clean_df('../experiments_data/ssa/speakers_all.csv')
     print("DF created")
 
@@ -198,6 +198,9 @@ if __name__ == '__main__':
         X_test_std = x_test_pca
 
     plt.scatter(x_train_pca[:,0], x_train_pca[:,1], c=y_train)
+    plt.show()
+
+    plt.scatter(X_train_std[:,0], X_train_std[:,1], c=y_train)
     plt.show()
 
 
