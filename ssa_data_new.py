@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from scipy.cluster.vq import whiten
 
 from tqdm import tqdm
 import os
@@ -126,12 +127,12 @@ if __name__ == '__main__':
     MFCCS = {}
     random.seed(1)
     target_size=2048
-    mfcc_size=26
-    run_pca = False
+    mfcc_size=39
+    run_pca = True
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, accent=accent, limit=10, test_size=6, target_size=target_size, mfcc_size=mfcc_size)
+        mfcc = Mfcc(df=df, accent=accent, limit=50, test_size=7, target_size=target_size, mfcc_size=mfcc_size)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
@@ -154,52 +155,40 @@ if __name__ == '__main__':
 
     # Standardise
     # PLOT CO-VARIANCE MATRIX
-    train_mean = X_train.mean()
-    train_std = X_train.std()
-    X_train_std = (X_train-train_mean)/train_std
-    X_test_std = (X_test-train_mean)/train_std
-    print("std:", X_train_std.shape)
-    # print(X_train_std[0].shape, X_train_std[0][0][0], X_train_std[0][0][-1])
-    # print(X_train[0][3])
-    # print(X_train_std[0][3])
-    #sys.exit("Error message")
+    # train_mean = X_train.mean()
+    # train_std = X_train.std()
+    # X_train_std = (X_train-train_mean)/train_std
+    # X_test_std = (X_test-train_mean)/train_std
+    # print("std:", X_train_std.shape)
+    # # print(X_train_std[0].shape, X_train_std[0][0][0], X_train_std[0][0][-1])
+    # # print(X_train[0][3])
+    # # print(X_train_std[0][3])
+    # #sys.exit("Error message")
 
-    print("Train mean:", train_mean)
-    print("Train stf:", train_std)
+    # print("Train mean:", train_mean)
+    # print("Train stf:", train_std)
 
-    y = []
-    for x in X_train_std[0]:
-        for i in x:
-            y.append(i)
+    # y = []
+    # for x in X_train_std[0]:
+    #     for i in x:
+    #         y.append(i)
 
-    plt.hist(y)
-    plt.show()
+    # plt.hist(y)
+    # plt.show()
+
+    X_train_std=whiten(X_train.transpose()).transpose()
+    X_test_std=whiten(X_test.transpose()).transpose()
+    print("X_train shape:", X_train.shape)
+    print("X_train whitened shape:", X_train_std.shape)
 
     # PCA
     if run_pca == True:
-        n_components = 10
+        n_components = 20
         pca = PCA(n_components=n_components)
         #pca = PCA()
         pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
 
         print("in PCA")
-
-        # nsamples, nx, ny = X_train_std.shape
-        # X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
-
-        # print(X_train_reshape.shape)
-
-        # x_train_pca = []
-        # for f in X_train_std:
-        #     x_train_pca.append(pipe.fit_transform(f))
-        
-        # x_test_pca = []
-        # for f in X_test_std:
-        #     x_test_pca.append(pipe.fit_transform(f))
-
-        # print(len(x_train_pca), len(x_train_pca[0]), len(x_train_pca[1]))
-
-        # ----
 
         nsamples, nx, ny = X_train_std.shape
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))

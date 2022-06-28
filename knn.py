@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 #data = "openslr83"
 data = "ssa"
 #data = "moz"
-mfcc_shape = 32
-length = 2048
+mfcc_shape = 39
+length = 10
 
 X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length)
 X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length)
