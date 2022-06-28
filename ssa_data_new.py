@@ -118,9 +118,8 @@ class Mfcc():
 
 
 if __name__ == '__main__':
-    #ACCENTS = ["usa", "china", "uk", "india", "canada", "south korea"]
-    #ACCENTS = ["usa", "china", "india"]
-    ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"]]
+    #ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"]]
+    ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"]]
     df = clean_df('../experiments_data/ssa/speakers_all.csv')
     print("DF created")
 
@@ -128,11 +127,11 @@ if __name__ == '__main__':
     random.seed(1)
     target_size=2048
     mfcc_size=39
-    run_pca = True
+    run_pca = False
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, accent=accent, limit=50, test_size=7, target_size=target_size, mfcc_size=mfcc_size)
+        mfcc = Mfcc(df=df, accent=accent, limit=20, test_size=4, target_size=target_size, mfcc_size=mfcc_size)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
@@ -176,10 +175,28 @@ if __name__ == '__main__':
     # plt.hist(y)
     # plt.show()
 
-    X_train_std=whiten(X_train.transpose()).transpose()
-    X_test_std=whiten(X_test.transpose()).transpose()
-    print("X_train shape:", X_train.shape)
-    print("X_train whitened shape:", X_train_std.shape)
+    # X_train_std=whiten(X_train.transpose()).transpose()
+    # X_test_std=whiten(X_test.transpose()).transpose()
+    # print("X_train shape:", X_train.shape)
+    # print("X_train whitened shape:", X_train_std.shape)
+
+    for d in X_train:
+        avgVal=np.mean(d,1) 
+        cmbAvg=d-avgVal[:,None] 
+        prcAbs=np.percentile(np.abs(cmbAvg),95,1)/2 
+        combinedDelta2Norm=cmbAvg/prcAbs[:,None] 
+        std2=np.std(combinedDelta2Norm,1)
+        print(d)
+        print(std2)
+        print(d[-1]/std2[-1])
+
+    # y = []
+    # for x in X_train_std[0]:
+    #     for i in x:
+    #         y.append(i)
+
+    # plt.hist(y)
+    # plt.show()
 
     # PCA
     if run_pca == True:
@@ -208,7 +225,10 @@ if __name__ == '__main__':
 
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
-        ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
+        scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
+        legend1 = ax.legend(*scatter.legend_elements(),
+                    loc="lower left", title="Classes")
+        ax.add_artist(legend1)
         plt.show()
 
 
