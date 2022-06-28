@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, accent=accent, limit=50, test_size=6, target_size=target_size, mfcc_size=mfcc_size)
+        mfcc = Mfcc(df=df, accent=accent, limit=20, test_size=6, target_size=target_size, mfcc_size=mfcc_size)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
@@ -175,29 +175,31 @@ if __name__ == '__main__':
     # plt.hist(y)
     # plt.show()
 
+    # Whiten over all files?
     X_train_std=whiten(X_train.transpose()).transpose()
     X_test_std=whiten(X_test.transpose()).transpose()
     # print("X_train shape:", X_train.shape)
     # print("X_train whitened shape:", X_train_std.shape)
 
-    # for d in X_train:
-    #     avgVal=np.mean(d,1) 
-    #     cmbAvg=d-avgVal[:,None] 
-    #     prcAbs=np.percentile(np.abs(cmbAvg),95,1)/2 
-    #     combinedDelta2Norm=cmbAvg/prcAbs[:,None] 
-    #     std2=np.std(combinedDelta2Norm,1)
-    #     print(d)
-    #     print(std2)
-    #     #print(d[-1]/std2[-1])
+
+    avgVal=np.mean(X_train,1) 
+    cmbAvg=X_train-avgVal[:,None] 
+    prcAbs=np.percentile(np.abs(cmbAvg),95,1)/2 
+    combinedDelta2Norm=cmbAvg/prcAbs[:,None] 
+    std2=np.std(combinedDelta2Norm,1)
+    print(X_train)
+    print(std2.shape)
 
 
-    y = []
-    for x in X_train_std:
-        for i in x:
-            y.append(i)
 
-    plt.hist(y)
-    plt.show()
+
+    # y = []
+    # for x in X_train_std[0]:
+    #     for i in x:
+    #         y.append(i)
+
+    # plt.hist(y)
+    # plt.show()
 
     # PCA
     if run_pca == True:
