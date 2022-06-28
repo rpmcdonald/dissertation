@@ -78,33 +78,20 @@ class Mfcc():
         self.list_of_deltas = list_of_deltas
         self.list_of_d_deltas = list_of_d_deltas
 
-        print(self.list_of_mfccs[0].shape, self.list_of_mfccs[0][0][0])
+        print("len of mfccs", len(self.list_of_mfccs))
+        print("Single mfcc shape:", self.list_of_mfccs[0].shape)
 
     def resize_mfcc(self):
-        # First part sets the length of all mfccs to the target_size and cuts off all data after that
-        resized_mfcc = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
-                         for mfcc in self.list_of_mfccs]
-        print(resized_mfcc[0].shape, resized_mfcc[0][0][0], resized_mfcc[0][0][-1])
-        # Second part adds in 3 arrays of zeros to the start of the mfcc
-        resized_mfcc = [np.vstack((np.zeros((3, self.target_size)), mfcc)) for mfcc in resized_mfcc]
-        # print(resized_mfcc[0].shape, resized_mfcc[0][0][0], resized_mfcc[0][3][0], resized_mfcc[0][0][-1])
-        
-        
-        resized_delta = [librosa.util.fix_length(delta, size=self.target_size, axis=1)
-                         for delta in self.list_of_deltas]
-        resized_delta = [np.vstack((np.zeros((3, self.target_size)), delta)) for delta in resized_delta]
-
-        # resized_d_delta = [librosa.util.fix_length(d_delta, size=self.target_size, axis=1)
-        #                  for d_delta in self.list_of_d_deltas]
-        # resized_d_delta = [np.vstack((np.zeros((3, self.target_size)), d_delta)) for d_delta in resized_d_delta]
-
+        # REORDER, CONCAT FIRST THEN REGULARISE
         combined = []
-        for i in range(len(resized_mfcc)):
-            combined.append(np.concatenate((resized_mfcc[i], resized_delta[i])))
-
-        self.X = combined
-        # self.X = resized_mfcc
-        #sys.exit("Error message")
+        for i in range(len(self.list_of_mfccs)):
+            combined.append(np.concatenate((self.list_of_mfccs[i], self.list_of_deltas[i], self.list_of_d_deltas[i])))
+        resized = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1)
+                         for mfcc in combined]
+        print("len of mfccs reshaped", len(self.list_of_mfccs))
+        print("Single mfcc reshaped shape:", resized[0].shape)
+        
+        self.X = resized
 
     def label_samples(self):
         self.y = np.full(shape=len(self.X), fill_value=ACCENTS.index(self.accent), dtype=int)
@@ -113,9 +100,9 @@ class Mfcc():
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
         # X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=self.test_size)
         self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.target_size)
-        print(self.X_train.shape)
+        print("X_train shape", self.X_train.shape)
         self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.target_size)
-        print(self.X_test.shape)
+        print("X_test shape", self.X_test.shape)
         self.y_train = np.array(y_train).reshape(-1, 1)
         self.y_test = np.array(y_test).reshape(-1,1)
 
@@ -138,13 +125,13 @@ if __name__ == '__main__':
 
     MFCCS = {}
     random.seed(1)
-    target_size=128
-    mfcc_size=32
-    run_pca = True
+    target_size=2048
+    mfcc_size=26
+    run_pca = False
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, accent=accent, limit=50, test_size=7, target_size=target_size, mfcc_size=mfcc_size)
+        mfcc = Mfcc(df=df, accent=accent, limit=10, test_size=6, target_size=target_size, mfcc_size=mfcc_size)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
@@ -166,6 +153,7 @@ if __name__ == '__main__':
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
 
     # Standardise
+    # PLOT CO-VARIANCE MATRIX
     train_mean = X_train.mean()
     train_std = X_train.std()
     X_train_std = (X_train-train_mean)/train_std
@@ -176,10 +164,20 @@ if __name__ == '__main__':
     # print(X_train_std[0][3])
     #sys.exit("Error message")
 
+    print("Train mean:", train_mean)
+    print("Train stf:", train_std)
+
+    y = []
+    for x in X_train_std[0]:
+        for i in x:
+            y.append(i)
+
+    plt.hist(y)
+    plt.show()
+
     # PCA
     if run_pca == True:
-        # n_components = int((target_size*mfcc_size))     # If you do not put in a n_components it will give target_size*mfcc_size, this maybe isnt true
-        n_components = 32
+        n_components = 10
         pca = PCA(n_components=n_components)
         #pca = PCA()
         pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
@@ -207,6 +205,7 @@ if __name__ == '__main__':
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
         x_train_pca = pipe.fit_transform(X_train_reshape)
         print(X_train_std.shape, x_train_pca.shape)
+        print(x_train_pca[0])
         #x_train_pca = np.array(x_train_pca).reshape(-1, mfcc_size, target_size)
         # print(self.X_train_std.shape, x_train_pca.shape)
         # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
@@ -218,10 +217,10 @@ if __name__ == '__main__':
         #x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, target_size)
         X_test_std = x_test_pca
 
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
-    plt.show()
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
+        plt.show()
 
 
     np.save(f'mfccs/X_train_ssa.npy', X_train_std)
