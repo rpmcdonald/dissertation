@@ -130,7 +130,7 @@ class Mfcc():
 if __name__ == '__main__':
     #ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"]]
     #ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"], ["brazil", "portuguese"], ["south korea", "korean"]]
-    ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"]]
+    ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["south korea", "korean"]]
     df = clean_df('../experiments_data/ssa/speakers_all.csv')
     print("DF created")
 
@@ -146,7 +146,7 @@ if __name__ == '__main__':
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, accent=accent, limit=35, test_size=6, target_size=target_size, mfcc_size=mfcc_size, randomise=randomise)
+        mfcc = Mfcc(df=df, accent=accent, limit=30, test_size=6, target_size=target_size, mfcc_size=mfcc_size, randomise=randomise)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
@@ -219,12 +219,12 @@ if __name__ == '__main__':
         #x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, target_size)
         X_test_std = x_test_pca
 
-        # fig = plt.figure()
-        # ax = fig.add_subplot(projection='3d')
-        # scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
-        # legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
-        # ax.add_artist(legend1)
-        # plt.show()
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
+        legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
+        ax.add_artist(legend1)
+        plt.show()
 
         print(y_train.shape)
         graph_y_train = y_train.reshape(-1)
@@ -236,7 +236,7 @@ if __name__ == '__main__':
             layout = py_go.Layout(title="Anomaly detection")
             figure = py_go.Figure(data=data, layout=layout)
             py_o.iplot(figure)
-            
+
         interactive_3d_plot(x_train_pca, names)
 
     if run_new_pca:

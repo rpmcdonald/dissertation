@@ -64,7 +64,7 @@ if data == "openslr83":
 if data == "ssa":
     #labels = ["usa", "ch", "uk", "ind", "can", "kor"]
     #labels = ["usa", "ch"]
-    labels = ["sa", "aus", "ch"]
+    labels = ["sa", "aus", "sk"]
     #labels = ["sa", "aus", "ch", "tur", "bra", "sk"]
 else:
     labels = model.classes_
