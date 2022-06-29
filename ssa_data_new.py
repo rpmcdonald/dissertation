@@ -187,7 +187,7 @@ if __name__ == '__main__':
     if run_pca:
         #n_components = 20
         #pca = PCA(n_components=n_components)
-        pca = PCA()
+        pca = PCA(n_components=40)
         pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
 
         print("in PCA")
@@ -218,14 +218,14 @@ if __name__ == '__main__':
 
     if run_new_pca:
         print("in PCA")
-        pca = PCA(n_components=39)
+        pca = PCA(n_components=2)
         #pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
         x_train_pca = []
         for x in X_train_std:
-            x_train_pca.append(pca.fit_transform(x))
+            x_train_pca.append(pca.fit_transform(x.T))
         x_test_pca = []
         for x in X_test_std:
-            x_test_pca.append(pca.transform(x))
+            x_test_pca.append(pca.transform(x.T))
         X_train_std = x_train_pca
         X_test_std = x_test_pca
         
@@ -238,7 +238,9 @@ if __name__ == '__main__':
         # legend1 = ax.legend(*scatter.legend_elements(),
         #             loc="lower left", title="Classes")
         # ax.add_artist(legend1)
-        # plt.show()
+        fig = plt.figure()
+        plt.scatter(x_train_pca[0][:,0], x_train_pca[0][:,1])
+        plt.show()
 
         # fig = plt.figure()
         # ax = fig.add_subplot(projection='3d')
