@@ -48,14 +48,15 @@ class Mfcc():
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
-        n_fft=2048
-        hop_length=1064
-        win_length=2048
+        n_fft=2048*2
+        hop_length=1064*2
+        win_length=2048*2
         # This is the same as not changing anything
         mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13, win_length=win_length, hop_length=hop_length, n_fft=n_fft) # format is (n_mfcc, )
         delta = librosa.feature.delta(mfcc)
         d_delta = librosa.feature.delta(mfcc, order=2)
-        #print(mfcc.shape)
+        # print(mfcc.shape)
+        # sys.exit("End")
         return mfcc, delta, d_delta
 
     def create_mfcc(self):
@@ -121,15 +122,16 @@ class Mfcc():
 
 if __name__ == '__main__':
     #ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"]]
+    #ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"], ["brazil", "portuguese"], ["south korea", "korean"]]
     ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"]]
     df = clean_df('../experiments_data/ssa/speakers_all.csv')
     print("DF created")
 
     MFCCS = {}
-    target_size=1024
+    target_size=256
     mfcc_size=39
     run_pca = False
-    run_new_pca = True
+    run_new_pca = False
     randomise = False
     if randomise == False:
         random.seed(1)

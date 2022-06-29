@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 data = "ssa"
 #data = "moz"
 mfcc_shape = 39
-length = 1024
+length = 256
 n_components = 40
-pca = True
+pca = False
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
@@ -65,6 +65,7 @@ if data == "ssa":
     #labels = ["usa", "ch", "uk", "ind", "can", "kor"]
     #labels = ["usa", "ch"]
     labels = ["sa", "aus", "ch"]
+    #labels = ["sa", "aus", "ch", "tur", "bra", "sk"]
 else:
     labels = model.classes_
 
