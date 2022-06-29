@@ -129,7 +129,8 @@ if __name__ == '__main__':
     target_size=1024
     mfcc_size=39
     run_pca = False
-    randomise = True
+    run_new_pca = True
+    randomise = False
     if randomise == False:
         random.seed(1)
 
@@ -183,7 +184,7 @@ if __name__ == '__main__':
     # plt.show()
 
     # PCA
-    if run_pca == True:
+    if run_pca:
         #n_components = 20
         #pca = PCA(n_components=n_components)
         pca = PCA()
@@ -194,8 +195,8 @@ if __name__ == '__main__':
         nsamples, nx, ny = X_train_std.shape
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
         x_train_pca = pipe.fit_transform(X_train_reshape)
-        print(X_train_std.shape, x_train_pca.shape)
-        print(x_train_pca[0])
+        print(X_train_std.shape, X_train_reshape.shape, x_train_pca.shape)
+        #print(x_train_pca[0])
         #x_train_pca = np.array(x_train_pca).reshape(-1, mfcc_size, target_size)
         # print(self.X_train_std.shape, x_train_pca.shape)
         # print(self.X_train_std[0][0][0], x_train_pca[0][0][0])
@@ -215,6 +216,38 @@ if __name__ == '__main__':
         ax.add_artist(legend1)
         plt.show()
 
+    if run_new_pca:
+        print("in PCA")
+        pca = PCA(n_components=4)
+        pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
+        x_train_pca = []
+        for x in X_train_std:
+            x_train_pca.append(pipe.fit_transform(x))
+        x_test_pca = []
+        for x in X_test_std:
+            x_test_pca.append(pipe.transform(x))
+        
+        print(len(x_train_pca),len(x_train_pca[0]),len(x_train_pca[0][0]))
+        print(x_train_pca[0][0][0])
+
+        # fig = plt.figure()
+        # ax = fig.add_subplot(projection='3d')
+        # scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
+        # legend1 = ax.legend(*scatter.legend_elements(),
+        #             loc="lower left", title="Classes")
+        # ax.add_artist(legend1)
+        # plt.show()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        # ax.scatter(x_train_pca[0][:,0], x_train_pca[0][:,1], x_train_pca[0][:,2])
+        # ax.scatter(x_train_pca[7][:,0], x_train_pca[7][:,1], x_train_pca[7][:,2])
+        # ax.scatter(x_train_pca[51][:,0], x_train_pca[51][:,1], x_train_pca[51][:,2])
+        # ax.scatter(x_train_pca[52][:,0], x_train_pca[52][:,1], x_train_pca[52][:,2])
+        colors = ["red", "blue", "green"]
+        for i in range(len(x_train_pca)):
+            ax.scatter(x_train_pca[i][:,0], x_train_pca[i][:,1], x_train_pca[i][:,2], color=colors[y_train[i][0]])
+        plt.show()
 
     np.save(f'mfccs/X_train_ssa.npy', X_train_std)
     np.save(f'mfccs/X_test_ssa.npy', X_test_std)
