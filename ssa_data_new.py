@@ -172,8 +172,6 @@ if __name__ == '__main__':
     # Whiten over each file seperately
     X_train_std=whiten(X_train.transpose()).transpose()
     X_test_std=whiten(X_test.transpose()).transpose()
-    # print("X_train shape:", X_train.shape)
-    # print("X_train whitened shape:", X_train_std.shape)
 
     # DIFFERENT METHOD NOT WORKING
     # avgVal=np.mean(X_train,1) 
