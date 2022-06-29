@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from scipy.cluster.vq import whiten
-
+import speechpy
 from tqdm import tqdm
 import os
 import random
@@ -152,54 +152,31 @@ if __name__ == '__main__':
         y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
 
-    # Standardise
-    # PLOT CO-VARIANCE MATRIX
-    # train_mean = X_train.mean()
-    # train_std = X_train.std()
-    # X_train_std = (X_train-train_mean)/train_std
-    # X_test_std = (X_test-train_mean)/train_std
-    # print("std:", X_train_std.shape)
-    # # print(X_train_std[0].shape, X_train_std[0][0][0], X_train_std[0][0][-1])
-    # # print(X_train[0][3])
-    # # print(X_train_std[0][3])
-    # #sys.exit("Error message")
-
-    # print("Train mean:", train_mean)
-    # print("Train stf:", train_std)
-
-    # y = []
-    # for x in X_train_std[0]:
-    #     for i in x:
-    #         y.append(i)
-
-    # plt.hist(y)
-    # plt.show()
-
-    # Whiten over all files?
+    # ---Standardise
+    # Whiten over each file seperately
     X_train_std=whiten(X_train.transpose()).transpose()
     X_test_std=whiten(X_test.transpose()).transpose()
     # print("X_train shape:", X_train.shape)
     # print("X_train whitened shape:", X_train_std.shape)
 
 
-    avgVal=np.mean(X_train,1) 
-    cmbAvg=X_train-avgVal[:,None] 
-    prcAbs=np.percentile(np.abs(cmbAvg),95,1)/2 
-    combinedDelta2Norm=cmbAvg/prcAbs[:,None] 
-    std2=np.std(combinedDelta2Norm,1)
-    print(X_train)
-    print(std2.shape)
+    # DIFFERENT METHOD NOT WORKING
+    # avgVal=np.mean(X_train,1) 
+    # cmbAvg=X_train-avgVal[:,None] 
+    # prcAbs=np.percentile(np.abs(cmbAvg),95,1)/2 
+    # combinedDelta2Norm=cmbAvg/prcAbs[:,None] 
+    # std2=np.std(combinedDelta2Norm,1)
+    # print(X_train)
+    # print(std2.shape)
 
 
+    y = []
+    for x in X_train_std[0]:
+        for i in x:
+            y.append(i)
 
-
-    # y = []
-    # for x in X_train_std[0]:
-    #     for i in x:
-    #         y.append(i)
-
-    # plt.hist(y)
-    # plt.show()
+    plt.hist(y, bins=100)
+    plt.show()
 
     # PCA
     if run_pca == True:
