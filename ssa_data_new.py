@@ -10,7 +10,7 @@ import IPython.display
 import sklearn.preprocessing
 import pydub
 from sklearn.model_selection import train_test_split
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, KernelPCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from scipy.cluster.vq import whiten
@@ -196,16 +196,15 @@ if __name__ == '__main__':
 
     # PCA
     if run_pca:
-        #n_components = 20
-        #pca = PCA(n_components=n_components)
-        pca = PCA(n_components=40)
-        pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
-
         print("in PCA")
+        pca = PCA(n_components=2)
+        #pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)]) # Can add this instead of pca below, gives different results and don't know why
+
+        kpca = KernelPCA(n_components = 2)
 
         nsamples, nx, ny = X_train_std.shape
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
-        x_train_pca = pipe.fit_transform(X_train_reshape)
+        x_train_pca = pca.fit_transform(X_train_reshape)
         print(X_train_std.shape, X_train_reshape.shape, x_train_pca.shape)
         #print(x_train_pca[0])
         #x_train_pca = np.array(x_train_pca).reshape(-1, mfcc_size, target_size)
@@ -215,29 +214,31 @@ if __name__ == '__main__':
 
         nsamples, nx, ny = X_test_std.shape
         X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
-        x_test_pca = pipe.transform(X_test_reshape)
+        x_test_pca = pca.transform(X_test_reshape)
         #x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, target_size)
         X_test_std = x_test_pca
 
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
-        legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
-        ax.add_artist(legend1)
-        plt.show()
+        # fig = plt.figure()
+        # ax = fig.add_subplot(projection='3d')
+        # scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
+        # legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
+        # ax.add_artist(legend1)
+        # for i, txt in enumerate(names):
+        #     ax.annotate(txt, (x_train_pca[i], x_train_pca[i], x_train_pca[i]))
+        # plt.show()
 
-        print(y_train.shape)
-        graph_y_train = y_train.reshape(-1)
-        print(graph_y_train)
+        # print(y_train.shape)
+        # graph_y_train = y_train.reshape(-1)
+        # print(graph_y_train)
 
-        def interactive_3d_plot(data, names):
-            scatt = py_go.Scatter3d(x=data[:, 0], y=data[:, 1], z=data[:, 2], mode="markers", text=names)
-            data = py_go.Data([scatt])
-            layout = py_go.Layout(title="Anomaly detection")
-            figure = py_go.Figure(data=data, layout=layout)
-            py_o.iplot(figure)
+        # def interactive_3d_plot(data, names):
+        #     scatt = py_go.Scatter3d(x=data[:, 0], y=data[:, 1], z=data[:, 2], mode="markers", text=names)
+        #     data = py_go.Data([scatt])
+        #     layout = py_go.Layout(title="Anomaly detection")
+        #     figure = py_go.Figure(data=data, layout=layout)
+        #     py_o.iplot(figure)
 
-        interactive_3d_plot(x_train_pca, names)
+        # interactive_3d_plot(x_train_pca, names)
 
     if run_new_pca:
         print("in PCA")
