@@ -31,7 +31,7 @@ def clean_df(file):
 
 class Mfcc():
 
-    def __init__(self, df, accent, limit, test_size, mfcc_size, target_size):
+    def __init__(self, df, accent, limit, test_size, mfcc_size, target_size, randomise):
         self.df = df
         self.accent = accent
         self.col = "filename"
@@ -39,6 +39,7 @@ class Mfcc():
         self.target_size = target_size
         self.mfcc_size = mfcc_size
         self.test_size = test_size
+        self.randomise = randomise
 
     def mp3towav(self):
         accent_df = self.df[(self.df['country']==self.accent[0]) & (self.df['native_language']==self.accent[1])]
@@ -48,8 +49,8 @@ class Mfcc():
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
         n_fft=2048
-        hop_length=512
-        win_length=hop_length*4
+        hop_length=1064
+        win_length=2048
         # This is the same as not changing anything
         mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13, win_length=win_length, hop_length=hop_length, n_fft=n_fft) # format is (n_mfcc, )
         delta = librosa.feature.delta(mfcc)
@@ -83,7 +84,6 @@ class Mfcc():
         print("Single mfcc shape:", self.list_of_mfccs[0].shape)
 
     def resize_mfcc(self):
-        # REORDER, CONCAT FIRST THEN REGULARISE
         combined = []
         for i in range(len(self.list_of_mfccs)):
             combined.append(np.concatenate((self.list_of_mfccs[i], self.list_of_deltas[i], self.list_of_d_deltas[i])))
@@ -98,8 +98,10 @@ class Mfcc():
         self.y = np.full(shape=len(self.X), fill_value=ACCENTS.index(self.accent), dtype=int)
 
     def split_data(self):
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
-        # X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=self.test_size)
+        if self.randomise:
+            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=self.test_size)
+        else:
+            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
         self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.target_size)
         print("X_train shape", self.X_train.shape)
         self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.target_size)
@@ -124,14 +126,16 @@ if __name__ == '__main__':
     print("DF created")
 
     MFCCS = {}
-    random.seed(1)
-    target_size=2048
+    target_size=1024
     mfcc_size=39
     run_pca = False
+    randomise = True
+    if randomise == False:
+        random.seed(1)
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, accent=accent, limit=20, test_size=6, target_size=target_size, mfcc_size=mfcc_size)
+        mfcc = Mfcc(df=df, accent=accent, limit=35, test_size=6, target_size=target_size, mfcc_size=mfcc_size, randomise=randomise)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
@@ -170,13 +174,13 @@ if __name__ == '__main__':
     # print(std2.shape)
 
 
-    y = []
-    for x in X_train_std[0]:
-        for i in x:
-            y.append(i)
+    # y = []
+    # for x in X_train_std[0]:
+    #     for i in x:
+    #         y.append(i)
 
-    plt.hist(y, bins=100)
-    plt.show()
+    # plt.hist(y, bins=100)
+    # plt.show()
 
     # PCA
     if run_pca == True:
