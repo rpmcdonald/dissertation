@@ -175,7 +175,6 @@ if __name__ == '__main__':
     # print("X_train shape:", X_train.shape)
     # print("X_train whitened shape:", X_train_std.shape)
 
-
     # DIFFERENT METHOD NOT WORKING
     # avgVal=np.mean(X_train,1) 
     # cmbAvg=X_train-avgVal[:,None] 
