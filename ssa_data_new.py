@@ -2,6 +2,8 @@ from turtle import color
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objs as py_go
+import plotly.offline as py_o
 import librosa
 import librosa.display
 import IPython.display
@@ -40,6 +42,7 @@ class Mfcc():
         self.mfcc_size = mfcc_size
         self.test_size = test_size
         self.randomise = randomise
+        self.names = []
 
     def mp3towav(self):
         accent_df = self.df[(self.df['country']==self.accent[0]) & (self.df['native_language']==self.accent[1])]
@@ -49,9 +52,9 @@ class Mfcc():
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
         n_fft=2048*2
-        hop_length=1064*2
+        hop_length=1024*2
         win_length=2048*2
-        # This is the same as not changing anything
+        # defaults n_fft=2048 hop_length=512 win_length=2048
         mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13, win_length=win_length, hop_length=hop_length, n_fft=n_fft) # format is (n_mfcc, )
         delta = librosa.feature.delta(mfcc)
         d_delta = librosa.feature.delta(mfcc, order=2)
@@ -70,6 +73,7 @@ class Mfcc():
         random.shuffle(wavs)
         #for wav in tqdm(wavs[:self.limit]):
         for wav in wavs[:self.limit]:
+            self.names.append(wav)
             file_name = f"..\experiments_data\ssa\wavs\{self.accent[0]}_{self.accent[1]}\{wav}"
             mfcc, delta, d_delta = self.wavtomfcc(file_name)
 
@@ -117,6 +121,9 @@ class Mfcc():
             "y_train": self.y_train,
             "y_test": self.y_test,
         }
+    
+    def return_names(self):
+        return self.names
 
 
 
@@ -128,9 +135,10 @@ if __name__ == '__main__':
     print("DF created")
 
     MFCCS = {}
+    names = []
     target_size=256
     mfcc_size=39
-    run_pca = False
+    run_pca = True
     run_new_pca = False
     randomise = False
     if randomise == False:
@@ -145,6 +153,7 @@ if __name__ == '__main__':
         mfcc.label_samples()
         mfcc.split_data()
         mfcc.save_mfccs()
+        names += mfcc.return_names()
 
     keys = list(MFCCS.keys())
 
@@ -210,13 +219,25 @@ if __name__ == '__main__':
         #x_test_pca = np.array(x_test_pca).reshape(-1, mfcc_size, target_size)
         X_test_std = x_test_pca
 
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
-        legend1 = ax.legend(*scatter.legend_elements(),
-                    loc="lower left", title="Classes")
-        ax.add_artist(legend1)
-        plt.show()
+        # fig = plt.figure()
+        # ax = fig.add_subplot(projection='3d')
+        # scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
+        # legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
+        # ax.add_artist(legend1)
+        # plt.show()
+
+        print(y_train.shape)
+        graph_y_train = y_train.reshape(-1)
+        print(graph_y_train)
+
+        def interactive_3d_plot(data, names):
+            scatt = py_go.Scatter3d(x=data[:, 0], y=data[:, 1], z=data[:, 2], mode="markers", text=names)
+            data = py_go.Data([scatt])
+            layout = py_go.Layout(title="Anomaly detection")
+            figure = py_go.Figure(data=data, layout=layout)
+            py_o.iplot(figure)
+            
+        interactive_3d_plot(x_train_pca, names)
 
     if run_new_pca:
         print("in PCA")
