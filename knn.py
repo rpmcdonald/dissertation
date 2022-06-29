@@ -9,9 +9,10 @@ data = "ssa"
 #data = "moz"
 mfcc_shape = 39
 length = 1024
+n_components = 39
 
-X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length)
-X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length)
+X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, n_components)
+X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, n_components)
 y_train = np.load(f'mfccs/y_train_{data}.npy')
 y_test = np.load(f'mfccs/y_test_{data}.npy')
 

@@ -218,14 +218,16 @@ if __name__ == '__main__':
 
     if run_new_pca:
         print("in PCA")
-        pca = PCA(n_components=4)
-        pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
+        pca = PCA(n_components=39)
+        #pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)])
         x_train_pca = []
         for x in X_train_std:
-            x_train_pca.append(pipe.fit_transform(x))
+            x_train_pca.append(pca.fit_transform(x))
         x_test_pca = []
         for x in X_test_std:
-            x_test_pca.append(pipe.transform(x))
+            x_test_pca.append(pca.transform(x))
+        X_train_std = x_train_pca
+        X_test_std = x_test_pca
         
         print(len(x_train_pca),len(x_train_pca[0]),len(x_train_pca[0][0]))
         print(x_train_pca[0][0][0])
@@ -238,16 +240,16 @@ if __name__ == '__main__':
         # ax.add_artist(legend1)
         # plt.show()
 
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        # ax.scatter(x_train_pca[0][:,0], x_train_pca[0][:,1], x_train_pca[0][:,2])
-        # ax.scatter(x_train_pca[7][:,0], x_train_pca[7][:,1], x_train_pca[7][:,2])
-        # ax.scatter(x_train_pca[51][:,0], x_train_pca[51][:,1], x_train_pca[51][:,2])
-        # ax.scatter(x_train_pca[52][:,0], x_train_pca[52][:,1], x_train_pca[52][:,2])
-        colors = ["red", "blue", "green"]
-        for i in range(len(x_train_pca)):
-            ax.scatter(x_train_pca[i][:,0], x_train_pca[i][:,1], x_train_pca[i][:,2], color=colors[y_train[i][0]])
-        plt.show()
+        # fig = plt.figure()
+        # ax = fig.add_subplot(projection='3d')
+        # # ax.scatter(x_train_pca[0][:,0], x_train_pca[0][:,1], x_train_pca[0][:,2])
+        # # ax.scatter(x_train_pca[7][:,0], x_train_pca[7][:,1], x_train_pca[7][:,2])
+        # # ax.scatter(x_train_pca[51][:,0], x_train_pca[51][:,1], x_train_pca[51][:,2])
+        # # ax.scatter(x_train_pca[52][:,0], x_train_pca[52][:,1], x_train_pca[52][:,2])
+        # colors = ["red", "blue", "green"]
+        # for i in range(len(x_train_pca)):
+        #     ax.scatter(x_train_pca[i][:,0], x_train_pca[i][:,1], x_train_pca[i][:,2], color=colors[y_train[i][0]])
+        # plt.show()
 
     np.save(f'mfccs/X_train_ssa.npy', X_train_std)
     np.save(f'mfccs/X_test_ssa.npy', X_test_std)
