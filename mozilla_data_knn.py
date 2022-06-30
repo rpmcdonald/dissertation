@@ -90,9 +90,10 @@ class Mfcc():
         return np.array(return_mfcc), np.array(return_delta), np.array(return_d_delta)
 
     def k_means_mfcc(self, mfcc):
-        kmeans = KMeans(n_clusters=3, random_state=0).fit_transform(mfcc)
-        print(kmeans)
-        sys.exit("End")
+        pass
+        # kmeans = KMeans(n_clusters=3, random_state=0).fit_transform(mfcc)
+        # print(kmeans)
+        # sys.exit("End")
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
@@ -141,7 +142,7 @@ class Mfcc():
         if not self.gkf:
             resized = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1) for mfcc in combined]
             if self.k_means:
-                self.k_means_mfcc(combined)
+                self.k_means_mfcc(resized)
         else:
             resized = [librosa.util.fix_length(mfcc, size=self.frames, axis=1) for mfcc in combined]
         print("len of mfccs reshaped", len(self.list_of_mfccs))
@@ -194,11 +195,11 @@ if __name__ == '__main__':
     names = []
     target_size=256
     mfcc_size=39
-    run_pca = False
-    run_lda = True
+    run_pca = True
+    run_lda = False
     randomise = False
-    get_key_frames = True
-    k_means = False
+    get_key_frames = False
+    k_means = True
     if randomise == False:
         random.seed(1)
 
@@ -251,19 +252,47 @@ if __name__ == '__main__':
     # ---PCA
     if run_pca:
         print("in PCA")
-        pca = PCA(n_components=3)
-        #pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)]) # Can add this instead of pca below, gives different results and don't know why
+        if k_means:
+            print("in k-means")
+            clusters = 3
+            x_train_k_means = []
+            for mfcc in X_train_std:
+                kmeans = KMeans(n_clusters=clusters, random_state=0).fit_transform(mfcc)
+                x_train_k_means.append(kmeans)
+            x_test_k_means = []
+            for mfcc in X_test_std:
+                kmeans = KMeans(n_clusters=3, random_state=0).fit_transform(mfcc)
+                x_test_k_means.append(kmeans)
 
-        nsamples, nx, ny = X_train_std.shape
-        X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
-        x_train_pca = pca.fit_transform(X_train_reshape)
-        print(X_train_std.shape, X_train_reshape.shape, x_train_pca.shape)
-        X_train_std = x_train_pca
+            x_train_k_means = np.array(x_train_k_means).reshape(-1, mfcc_size, clusters)
+            x_test_k_means = np.array(x_test_k_means).reshape(-1, mfcc_size, clusters)
 
-        nsamples, nx, ny = X_test_std.shape
-        X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
-        x_test_pca = pca.transform(X_test_reshape)
-        X_test_std = x_test_pca
+            pca = PCA(n_components=3)
+
+            nsamples, nx, ny = x_train_k_means.shape
+            X_train_reshape = x_train_k_means.reshape((nsamples,nx*ny))
+            x_train_pca = pca.fit_transform(X_train_reshape)
+            print(X_train_std.shape, x_train_k_means.shape, x_train_pca.shape)
+            X_train_std = x_train_pca
+
+            nsamples, nx, ny = x_test_k_means.shape
+            X_test_reshape = x_test_k_means.reshape((nsamples,nx*ny))
+            x_test_pca = pca.transform(X_test_reshape)
+            X_test_std = x_test_pca
+        else:    
+            pca = PCA(n_components=3)
+            #pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)]) # Can add this instead of pca below, gives different results and don't know why
+
+            nsamples, nx, ny = X_train_std.shape
+            X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
+            x_train_pca = pca.fit_transform(X_train_reshape)
+            print(X_train_std.shape, X_train_reshape.shape, x_train_pca.shape)
+            X_train_std = x_train_pca
+
+            nsamples, nx, ny = X_test_std.shape
+            X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
+            x_test_pca = pca.transform(X_test_reshape)
+            X_test_std = x_test_pca
 
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
