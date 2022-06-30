@@ -45,6 +45,7 @@ class Mfcc():
         self.randomise = randomise
         self.gkf = get_key_frames
         self.k_means = k_means
+        self.frames = 10
         self.names = []
 
     def mp3towav(self):
@@ -55,9 +56,9 @@ class Mfcc():
     def get_key_frames(self, mfcc, delta, d_delta, rms, n):
         rms = rms.reshape(-1)
         values = list(zip(*sorted( [(x,i) for (i,x) in enumerate(rms)], 
-                    reverse=True )[:n*2] ))[0]
+                    reverse=True )[:n*3] ))[0]
         posns = list(zip(*sorted( [(x,i) for (i,x) in enumerate(rms)], 
-                    reverse=True )[:n*2] ))[1] 
+                    reverse=True )[:n*3] ))[1] 
         #print(values)
         #print(posns)
         # Make sure highest values are not next to each other
@@ -106,7 +107,7 @@ class Mfcc():
         if self.gkf:
             rms = librosa.feature.rms(y=wave)
             #print(mfcc.shape, rms.shape)
-            mfcc, delta, d_delta = self.get_key_frames(mfcc, delta, d_delta, rms, 3)
+            mfcc, delta, d_delta = self.get_key_frames(mfcc, delta, d_delta, rms, self.frames)
             #print(mfcc.shape)
         # if self.k_means:
         #     self.k_means_mfcc(mfcc)
@@ -147,7 +148,7 @@ class Mfcc():
             if self.k_means:
                 self.k_means_mfcc(combined)
         else:
-            resized = [librosa.util.fix_length(mfcc, size=3, axis=1) for mfcc in combined]
+            resized = [librosa.util.fix_length(mfcc, size=self.frames, axis=1) for mfcc in combined]
         print("len of mfccs reshaped", len(self.list_of_mfccs))
         print("Single mfcc reshaped shape:", resized[0].shape)
         
@@ -168,9 +169,9 @@ class Mfcc():
             self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.target_size)
             print("X_test shape", self.X_test.shape)
         else:
-            self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, 3)
+            self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.frames)
             print("X_train shape", self.X_train.shape)
-            self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, 3)
+            self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.frames)
             print("X_test shape", self.X_test.shape)
         self.y_train = np.array(y_train).reshape(-1, 1)
         self.y_test = np.array(y_test).reshape(-1,1)
@@ -192,6 +193,7 @@ if __name__ == '__main__':
     #ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"]]
     #ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["china", "mandarin"], ["turkey", "turkish"], ["brazil", "portuguese"], ["south korea", "korean"]]
     ACCENTS = [["saudi arabia", "arabic"], ["australia", "english"], ["south korea", "korean"]]
+    #ACCENTS = [["canada", "english"], ["australia", "english"]]
     df = clean_df('../experiments_data/ssa/speakers_all.csv')
     print("DF created")
 
@@ -297,8 +299,19 @@ if __name__ == '__main__':
         nsamples, nx, ny = X_train_std.shape
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
         lda.fit(X_train_reshape, y_train.reshape(-1))
-        transformed = lda.transform(X_train_std)
-        print(transformed.shape)
+        X_train_std = lda.transform(X_train_reshape)
+        #print(X_train_std.shape)
+
+        nsamples, nx, ny = X_test_std.shape
+        X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
+        X_test_std = lda.transform(X_test_reshape)
+
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        scatter = ax.scatter(X_train_std[:,0], X_train_std[:,1], c=y_train)
+        legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
+        ax.add_artist(legend1)
+        plt.show()
 
 
     np.save(f'mfccs/X_train_ssa.npy', X_train_std)
