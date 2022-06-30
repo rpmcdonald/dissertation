@@ -10,7 +10,7 @@ data = "ssa"
 #data = "moz"
 mfcc_shape = 39
 length = 256
-n_components = 2
+n_components = 3
 pca = True
 
 if pca:
