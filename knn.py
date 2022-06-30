@@ -6,11 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #data = "openslr83"
-data = "ssa"
-#data = "moz"
+#data = "ssa"
+data = "moz"
 mfcc_shape = 39
 length = 256
-n_components = 2
+n_components = 1
 pca = True
 
 if pca:
