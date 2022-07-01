@@ -195,11 +195,11 @@ if __name__ == '__main__':
     names = []
     target_size=256
     mfcc_size=39
-    run_pca = True
-    run_lda = False
+    run_pca = False
+    run_lda = True
     randomise = False
     get_key_frames = False
-    k_means = True
+    k_means = False
     if randomise == False:
         random.seed(1)
 
@@ -256,13 +256,14 @@ if __name__ == '__main__':
             print("in k-means")
             clusters = 3
             x_train_k_means = []
+            kmeans = KMeans(n_clusters=clusters, random_state=0)
             for mfcc in X_train_std:
-                kmeans = KMeans(n_clusters=clusters, random_state=0).fit_transform(mfcc)
-                x_train_k_means.append(kmeans)
+                k = kmeans.fit_transform(mfcc)
+                x_train_k_means.append(k)
             x_test_k_means = []
             for mfcc in X_test_std:
-                kmeans = KMeans(n_clusters=3, random_state=0).fit_transform(mfcc)
-                x_test_k_means.append(kmeans)
+                k = kmeans.transform(mfcc)
+                x_test_k_means.append(k)
 
             x_train_k_means = np.array(x_train_k_means).reshape(-1, mfcc_size, clusters)
             x_test_k_means = np.array(x_test_k_means).reshape(-1, mfcc_size, clusters)
@@ -321,7 +322,7 @@ if __name__ == '__main__':
         nsamples, nx, ny = X_train_std.shape
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
         lda.fit(X_train_reshape, y_train.reshape(-1))
-        X_train_std = lda.transform(X_train_reshape)
+        #X_train_std = lda.transform(X_train_reshape)
         #print(X_train_std.shape)
 
         nsamples, nx, ny = X_test_std.shape

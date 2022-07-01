@@ -10,11 +10,15 @@ import matplotlib.pyplot as plt
 data = "moz"
 mfcc_shape = 39
 length = 256
-n_components = 3
-pca = True
+n_components = 1
+pca = False
+lda = True
 
-if pca:
-    X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
+if pca or lda:
+    if pca:
+        X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
+    else:
+        X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length)
     X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, n_components)
 else:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length)
@@ -32,7 +36,19 @@ grid_params = {
 y_train = np.ravel(y_train)
 #print(y_train.shape)
 
-if not pca:
+if pca or lda:
+    if lda:
+        nsamples, nx, ny = X_train.shape
+        X_train = X_train.reshape((nsamples,nx*ny))
+    model = GridSearchCV(KNeighborsClassifier(), grid_params, cv=5, n_jobs=-1, verbose=1)
+    model.fit(X_train,y_train)
+    y_predict = model.predict(X_test)
+    y_test = np.ravel(y_test)
+    print(f'Model Score: {model.score(X_test, y_test)}')
+    print(f"Best params: {model.best_params_}")
+    cm = confusion_matrix(y_test, y_predict)
+    print(f'Confusion Matrix: \n{cm}')
+else:
     nsamples, nx, ny = X_train.shape
     X_train_reshape = X_train.reshape((nsamples,nx*ny))
 
@@ -47,15 +63,6 @@ if not pca:
     y_predict = model.predict(X_test_reshape)
     y_test = np.ravel(y_test)
     print(f'Model Score: {model.score(X_test_reshape, y_test)}')
-    print(f"Best params: {model.best_params_}")
-    cm = confusion_matrix(y_test, y_predict)
-    print(f'Confusion Matrix: \n{cm}')
-else:
-    model = GridSearchCV(KNeighborsClassifier(), grid_params, cv=5, n_jobs=-1, verbose=1)
-    model.fit(X_train,y_train)
-    y_predict = model.predict(X_test)
-    y_test = np.ravel(y_test)
-    print(f'Model Score: {model.score(X_test, y_test)}')
     print(f"Best params: {model.best_params_}")
     cm = confusion_matrix(y_test, y_predict)
     print(f'Confusion Matrix: \n{cm}')
