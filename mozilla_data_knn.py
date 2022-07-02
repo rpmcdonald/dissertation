@@ -322,7 +322,8 @@ if __name__ == '__main__':
         nsamples, nx, ny = X_train_std.shape
         X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
         lda.fit(X_train_reshape, y_train.reshape(-1))
-        #X_train_std = lda.transform(X_train_reshape)
+        # IS THIS RIGHT?
+        X_train_std = lda.transform(X_train_reshape)
         #print(X_train_std.shape)
 
         nsamples, nx, ny = X_test_std.shape
