@@ -21,6 +21,7 @@ from tqdm import tqdm
 import os
 import random
 import sys
+import math
 
 
 def clean_df(file):
@@ -34,7 +35,7 @@ def clean_df(file):
 
 class Mfcc():
 
-    def __init__(self, df, accent, limit, test_size, mfcc_size, target_size, randomise, get_key_frames, k_means):
+    def __init__(self, df, accent, limit, test_size, mfcc_size, target_size, randomise, get_key_frames, remove_silence):
         self.df = df
         self.accent = accent
         self.col = "filename"
@@ -44,7 +45,8 @@ class Mfcc():
         self.test_size = test_size
         self.randomise = randomise
         self.gkf = get_key_frames
-        self.k_means = k_means
+        self.rem_silence = remove_silence
+        self.rem_silence_percent = 0.45
         self.frames = 10
         self.names = []
 
@@ -89,11 +91,28 @@ class Mfcc():
 
         return np.array(return_mfcc), np.array(return_delta), np.array(return_d_delta)
 
-    def k_means_mfcc(self, mfcc):
-        pass
-        # kmeans = KMeans(n_clusters=3, random_state=0).fit_transform(mfcc)
-        # print(kmeans)
-        # sys.exit("End")
+    def remove_silence(self, mfcc, delta, d_delta, rms, rem_silence_percent):
+        rms = rms.reshape(-1)
+        _, data_length = mfcc.shape
+        data_length = math.ceil(data_length * (1-rem_silence_percent))
+        posns = list(zip(*sorted( [(x,i) for (i,x) in enumerate(rms)], 
+                    reverse=True )[:data_length] ))[1]
+        return_mfcc = []
+        return_delta = []
+        return_d_delta = []
+        for i in range(len(mfcc)):
+            temp_mfcc = []
+            temp_delta = []
+            temp_d_delta = []
+            for n in posns:
+                temp_mfcc.append(mfcc[i][n])
+                temp_delta.append(delta[i][n])
+                temp_d_delta.append(d_delta[i][n])
+            return_mfcc.append(temp_mfcc)
+            return_delta.append(temp_delta)
+            return_d_delta.append(temp_d_delta)
+            
+        return np.array(return_mfcc), np.array(return_delta), np.array(return_d_delta)
 
     def wavtomfcc(self, file_path):
         wave, sr = librosa.load(file_path, mono=True, sr=None)
@@ -110,8 +129,9 @@ class Mfcc():
             #print(mfcc.shape, rms.shape)
             mfcc, delta, d_delta = self.get_key_frames(mfcc, delta, d_delta, rms, self.frames)
             #print(mfcc.shape)
-        # if self.k_means:
-        #     self.k_means_mfcc(mfcc)
+        if self.rem_silence:
+            rms = librosa.feature.rms(y=wave)
+            mfcc, delta, d_delta = self.remove_silence(mfcc, delta, d_delta, rms, self.rem_silence_percent)
         return mfcc, delta, d_delta
 
     def create_mfcc(self):
@@ -141,8 +161,6 @@ class Mfcc():
             combined.append(np.concatenate((self.list_of_mfccs[i], self.list_of_deltas[i], self.list_of_d_deltas[i])))
         if not self.gkf:
             resized = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1) for mfcc in combined]
-            if self.k_means:
-                self.k_means_mfcc(resized)
         else:
             resized = [librosa.util.fix_length(mfcc, size=self.frames, axis=1) for mfcc in combined]
         print("len of mfccs reshaped", len(self.list_of_mfccs))
@@ -195,11 +213,14 @@ if __name__ == '__main__':
     names = []
     target_size=256
     mfcc_size=39
-    run_pca = False
-    run_lda = True
     randomise = False
     get_key_frames = False
+    remove_silence = True
+
+    run_pca = False
+    run_lda = False
     k_means = False
+
     if randomise == False:
         random.seed(1)
 
@@ -213,7 +234,7 @@ if __name__ == '__main__':
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
                     get_key_frames=get_key_frames,
-                    k_means=k_means)
+                    remove_silence=remove_silence)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
