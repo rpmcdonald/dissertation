@@ -166,6 +166,7 @@ class Mfcc():
         print("len of mfccs reshaped", len(self.list_of_mfccs))
         print("Single mfcc reshaped shape:", resized[0].shape)
         
+        resized = speechpy.processing.cmvn(resized, variance_normalization=False)
         self.X = resized
 
     def label_samples(self):
