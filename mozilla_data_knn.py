@@ -166,7 +166,9 @@ class Mfcc():
         print("len of mfccs reshaped", len(self.list_of_mfccs))
         print("Single mfcc reshaped shape:", resized[0].shape)
         
-        resized = speechpy.processing.cmvn(resized, variance_normalization=False)
+        # resized = np.array(resized).reshape(-1, self.mfcc_size, self.target_size)
+        # print(resized.shape)
+        resized = [speechpy.processing.cmvn(x, variance_normalization=False) for x in resized]
         self.X = resized
 
     def label_samples(self):
@@ -221,6 +223,7 @@ if __name__ == '__main__':
     run_pca = False
     run_lda = False
     k_means = False
+    split_files = True
 
     if randomise == False:
         random.seed(1)
@@ -257,6 +260,59 @@ if __name__ == '__main__':
         y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
 
+    # Split the files into smaller chunks
+    if split_files:
+        split_size = 128
+        # Split X_train and X_test into 128 frames, and then update y_train and y_test so they match the new results
+        n_splits = int(target_size/split_size)
+
+        # y_train and y_test
+        new_y_train = []
+        for y in y_train:
+            new_y_train.extend([y for i in range(n_splits)])
+
+        new_y_test = []
+        for y in y_test:
+            new_y_test.extend([y for i in range(n_splits)])
+        
+        # X_train and X_test
+        new_X_train = []
+        for x in X_train:
+            new_x = []
+            low = 0
+            high = split_size
+            while len(new_x) < n_splits:
+                temp_mfccs = []
+                for mfcc in x:
+                    temp_mfccs.append(mfcc[low:high])
+                    low += split_size
+                    high += split_size
+                new_x.append(temp_mfccs)
+            new_X_train.extend(new_x)
+        
+        new_X_test = []
+        for x in X_test:
+            new_x = []
+            low = 0
+            high = split_size
+            while len(new_x) < n_splits:
+                temp_mfccs = []
+                for mfcc in x:
+                    temp_mfccs.append(mfcc[low:high])
+                    low += split_size
+                    high += split_size
+                new_x.append(temp_mfccs)
+            new_X_test.extend(new_x)
+        
+        y_train = new_y_train
+        y_test = new_y_test
+        print(X_train.shape)
+        print(len(new_X_train), len(new_X_train[0]), len(new_X_train[0][0]))
+        print(new_X_train[0][0])
+
+        X_train = np.array(new_X_train).reshape(-1, mfcc_size, split_size)
+        X_test = np.array(new_X_test).reshape(-1, mfcc_size, split_size)
+    
     # ---Standardise
     # Whiten over each file seperately
     X_train_std=whiten(X_train.transpose()).transpose()

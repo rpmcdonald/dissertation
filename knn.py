@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 data = "moz"
 mfcc_shape = 39
 length = 256
-n_components = 3
+n_components = 1
 pca = True
 
 if pca:
@@ -27,7 +27,8 @@ print(X_train.shape, X_test.shape, len(y_train), len(y_test))
 grid_params = {
     'n_neighbors': list(range(1, 15)),
     'weights': ['uniform', 'distance'],
-    'metric': ['euclidean', 'manhattan']
+    'metric': ['euclidean', 'manhattan', 'minkowski', 'chebyshev'],
+    'algorithm': ['ball_tree', 'kd_tree', 'brute']
 }
 y_train = np.ravel(y_train)
 #print(y_train.shape)
