@@ -46,7 +46,7 @@ class Mfcc():
         self.randomise = randomise
         self.gkf = get_key_frames
         self.rem_silence = remove_silence
-        self.rem_silence_percent = 0.45
+        self.rem_silence_percent = 0.25
         self.frames = 10
         self.names = []
 
@@ -305,6 +305,10 @@ if __name__ == '__main__':
                 new_x.append(temp_mfccs)
             new_X_test.extend(new_x)
         
+        # HALF THE DATA IS EMPTY
+        for x in new_X_train:
+            print(x[0], x[1])
+
         y_train = new_y_train
         y_test = new_y_test
         print(X_train.shape, X_test.shape)
