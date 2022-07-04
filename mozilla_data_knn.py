@@ -288,6 +288,7 @@ if __name__ == '__main__':
                     low += split_size
                     high += split_size
                 new_x.append(temp_mfccs)
+            print(len(new_x), len(new_x[0]), len(new_x[0][0]))
             new_X_train.extend(new_x)
         
         new_X_test = []
@@ -306,12 +307,12 @@ if __name__ == '__main__':
         
         y_train = new_y_train
         y_test = new_y_test
-        print(X_train.shape)
+        print(X_train.shape, X_test.shape)
         print(len(new_X_train), len(new_X_train[0]), len(new_X_train[0][0]))
-        print(new_X_train[0][0])
+        print(len(new_X_test), len(new_X_test[0]), len(new_X_test[0][0]))
 
-        X_train = np.array(new_X_train).reshape(-1, mfcc_size, split_size)
-        X_test = np.array(new_X_test).reshape(-1, mfcc_size, split_size)
+        X_train = np.array(new_X_train, dtype="object").reshape(-1, mfcc_size, split_size)
+        X_test = np.array(new_X_test, dtype="object").reshape(-1, mfcc_size, split_size)
     
     # ---Standardise
     # Whiten over each file seperately
