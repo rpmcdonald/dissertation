@@ -158,7 +158,11 @@ class Mfcc():
     def resize_mfcc(self):
         combined = []
         for i in range(len(self.list_of_mfccs)):
-            combined.append(np.concatenate((self.list_of_mfccs[i], self.list_of_deltas[i], self.list_of_d_deltas[i])))
+            comb = np.concatenate((self.list_of_mfccs[i], self.list_of_deltas[i], self.list_of_d_deltas[i]))
+            if comb.shape[1] < target_size: # This will remove anything which is smaller than the target size so it isn't padded with zeroes
+                pass
+            else:
+                combined.append(comb)
         if not self.gkf:
             resized = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1) for mfcc in combined]
         else:
@@ -213,17 +217,17 @@ if __name__ == '__main__':
 
     MFCCS = {}
     names = []
-    target_size=128
+    target_size=256
     mfcc_size=39
     randomise = False
     get_key_frames = False
     remove_silence = True
 
-    run_pca = True
+    run_pca = False
     run_lda = False
     k_means = False
     split_files = True
-    split_size=32
+    split_size=64
 
     if randomise == False:
         random.seed(1)

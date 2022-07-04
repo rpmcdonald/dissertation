@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 #data = "ssa"
 data = "moz"
 mfcc_shape = 39
-length = 32
+length = 64
 n_components = 3
-pca = True
+pca = False
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
