@@ -205,7 +205,6 @@ class Mfcc():
         return self.names
 
 
-
 if __name__ == '__main__':
     #ACCENTS = ["canada", "australia", "indian"]
     ACCENTS = ["canada", "australia"]
@@ -214,16 +213,17 @@ if __name__ == '__main__':
 
     MFCCS = {}
     names = []
-    target_size=256
+    target_size=128
     mfcc_size=39
     randomise = False
     get_key_frames = False
     remove_silence = True
 
-    run_pca = False
+    run_pca = True
     run_lda = False
     k_means = False
     split_files = True
+    split_size=32
 
     if randomise == False:
         random.seed(1)
@@ -262,7 +262,7 @@ if __name__ == '__main__':
 
     # Split the files into smaller chunks
     if split_files:
-        split_size = 128
+        #split_size = 32
         # Split X_train and X_test into 128 frames, and then update y_train and y_test so they match the new results
         n_splits = int(target_size/split_size)
 
@@ -285,10 +285,10 @@ if __name__ == '__main__':
                 temp_mfccs = []
                 for mfcc in x:
                     temp_mfccs.append(mfcc[low:high])
-                    low += split_size
-                    high += split_size
+                low += split_size
+                high += split_size
                 new_x.append(temp_mfccs)
-            print(len(new_x), len(new_x[0]), len(new_x[0][0]))
+            #print(len(new_x), len(new_x[0]), len(new_x[0][0]), len(new_x[1]), len(new_x[1][0]))
             new_X_train.extend(new_x)
         
         new_X_test = []
@@ -300,23 +300,25 @@ if __name__ == '__main__':
                 temp_mfccs = []
                 for mfcc in x:
                     temp_mfccs.append(mfcc[low:high])
-                    low += split_size
-                    high += split_size
+                    if np.sum(mfcc[low:high]) == 0:
+                        print("error")
+                low += split_size
+                high += split_size
                 new_x.append(temp_mfccs)
             new_X_test.extend(new_x)
         
         # HALF THE DATA IS EMPTY
-        for x in new_X_train:
-            print(x[0], x[1])
+        # for x in new_X_train:
+        #     print(x[0], x[1])
 
-        y_train = new_y_train
-        y_test = new_y_test
+        y_train = np.array(new_y_train)
+        y_test = np.array(new_y_test)
         print(X_train.shape, X_test.shape)
         print(len(new_X_train), len(new_X_train[0]), len(new_X_train[0][0]))
         print(len(new_X_test), len(new_X_test[0]), len(new_X_test[0][0]))
 
-        X_train = np.array(new_X_train, dtype="object").reshape(-1, mfcc_size, split_size)
-        X_test = np.array(new_X_test, dtype="object").reshape(-1, mfcc_size, split_size)
+        X_train = np.array(new_X_train).reshape(-1, mfcc_size, split_size)
+        X_test = np.array(new_X_test).reshape(-1, mfcc_size, split_size)
     
     # ---Standardise
     # Whiten over each file seperately
@@ -383,7 +385,7 @@ if __name__ == '__main__':
         scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
         legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
         ax.add_artist(legend1)
-        plt.show()
+        #plt.show()
 
         # print(y_train.shape)
         # graph_y_train = y_train.reshape(-1)
@@ -396,7 +398,7 @@ if __name__ == '__main__':
             figure = py_go.Figure(data=data, layout=layout)
             py_o.iplot(figure)
 
-        interactive_3d_plot(x_train_pca, names)
+        # interactive_3d_plot(x_train_pca, names)
 
     # --- LDA
     if run_lda:

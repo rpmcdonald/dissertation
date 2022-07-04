@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 #data = "ssa"
 data = "moz"
 mfcc_shape = 39
-length = 256
-n_components = 1
+length = 32
+n_components = 3
 pca = True
 
 if pca:
@@ -28,7 +28,7 @@ grid_params = {
     'n_neighbors': list(range(1, 15)),
     'weights': ['uniform', 'distance'],
     'metric': ['euclidean', 'manhattan', 'minkowski', 'chebyshev'],
-    'algorithm': ['ball_tree', 'kd_tree', 'brute']
+    #'algorithm': ['ball_tree', 'kd_tree', 'brute']
 }
 y_train = np.ravel(y_train)
 #print(y_train.shape)
