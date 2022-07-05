@@ -35,7 +35,7 @@ def clean_df(file):
 
 class Mfcc():
 
-    def __init__(self, df, accent, limit, test_size, mfcc_size, target_size, randomise, get_key_frames, remove_silence):
+    def __init__(self, df, accent, limit, test_size, mfcc_size, target_size, randomise, get_key_frames, remove_silence, remove_silence_percent, cmvn):
         self.df = df
         self.accent = accent
         self.col = "filename"
@@ -46,14 +46,15 @@ class Mfcc():
         self.randomise = randomise
         self.gkf = get_key_frames
         self.rem_silence = remove_silence
-        self.rem_silence_percent = 0.25
+        self.rem_silence_percent = remove_silence_percent
+        self.cmvn = cmvn
         self.frames = 10
         self.names = []
 
     def mp3towav(self):
-        accent_df = self.df[(self.df['country']==self.accent[0]) & (self.df['native_language']==self.accent[1])]
+        accent_df = self.df[self.df['accent']==self.accent]
         for filename in tqdm(accent_df[self.col]):
-            pydub.AudioSegment.from_mp3(f"../experiments_data/mozilla/recordings/{filename}.mp3").export(f"../experiments_data/mozilla/wavs/{filename}.wav", format="wav")
+            pydub.AudioSegment.from_mp3(f"../experiments_data/mozilla/org_mp3/{filename}.mp3").export(f"../experiments_data/mozilla/wavs/{filename}.wav", format="wav")
 
     def get_key_frames(self, mfcc, delta, d_delta, rms, n):
         rms = rms.reshape(-1)
@@ -139,6 +140,7 @@ class Mfcc():
         list_of_deltas = []
         list_of_d_deltas = []
         accent_df = self.df[self.df['accent']==self.accent]
+        accent_df = accent_df.sample(frac=1, random_state=0)
         for wav in accent_df[self.col][:self.limit]:
             self.names.append(wav)
             file_name = f"..\experiments_data\mozilla\wavs\{wav}.wav"
@@ -172,7 +174,8 @@ class Mfcc():
         
         # resized = np.array(resized).reshape(-1, self.mfcc_size, self.target_size)
         # print(resized.shape)
-        resized = [speechpy.processing.cmvn(x, variance_normalization=False) for x in resized]
+        if self.cmvn:
+            resized = [speechpy.processing.cmvn(x, variance_normalization=False) for x in resized]
         self.X = resized
 
     def label_samples(self):
@@ -212,7 +215,7 @@ class Mfcc():
 if __name__ == '__main__':
     #ACCENTS = ["canada", "australia", "indian"]
     ACCENTS = ["canada", "australia"]
-    df = clean_df('../experiments_data/mozilla/validated.csv')
+    df = clean_df('../experiments_data/mozilla/validated_full.csv')
     print("DF created")
 
     MFCCS = {}
@@ -222,6 +225,8 @@ if __name__ == '__main__':
     randomise = False
     get_key_frames = False
     remove_silence = True
+    remove_silence_percent = 0.4
+    cmvn = True
 
     run_pca = False
     run_lda = False
@@ -236,13 +241,15 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=180, 
+                    limit=250, 
                     test_size=30, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
                     get_key_frames=get_key_frames,
-                    remove_silence=remove_silence)
+                    remove_silence=remove_silence,
+                    remove_silence_percent=remove_silence_percent,
+                    cmvn=cmvn)
         # mfcc.mp3towav()
         mfcc.create_mfcc()
         mfcc.resize_mfcc()
