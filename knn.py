@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 data = "moz"
 mfcc_shape = 39
 length = 64
-n_components = 3
+n_components = 1
 pca = False
 
 if pca:

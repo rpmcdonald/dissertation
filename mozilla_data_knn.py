@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
     MFCCS = {}
     names = []
-    target_size=256
+    target_size=128
     mfcc_size=39
     randomise = False
     get_key_frames = False
@@ -226,7 +226,7 @@ if __name__ == '__main__':
     run_pca = False
     run_lda = False
     k_means = False
-    split_files = True
+    split_files = False
     split_size=64
 
     if randomise == False:
@@ -236,8 +236,8 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=150, 
-                    test_size=20, 
+                    limit=180, 
+                    test_size=30, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
