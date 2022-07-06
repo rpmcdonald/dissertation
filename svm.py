@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 data = "moz"
 mfcc_shape = 39
 length = 128
-n_components = 1
-pca = True
+n_components = 3
+pca = False
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
@@ -22,14 +22,15 @@ y_test = np.load(f'mfccs/y_test_{data}.npy')
 print(X_train.shape, X_test.shape, len(y_train), len(y_test))
 
 # Set up model parameters
-parameters = [{'C' : [1,10,100,1000], 'kernel' : ['linear']},{'C' : [1,10,100,1000], 'kernel' : ['rbf'], 'gamma' : [0.5,0.1,0.01,0.001]}]
+parameters = [{'C' : [0.1,1,10,100,1000], 'kernel' : ['linear']},{'C' : [0.1,1,10,100,1000], 'kernel' : ['rbf'], 'gamma' : [0.5,0.1,0.01,0.001]}]
 classifier = SVC(kernel = 'linear', random_state=0,  C=1)
 
 grid_search = GridSearchCV(estimator=classifier,
 	param_grid=parameters,
 	scoring='accuracy',
-	cv=10,
-	n_jobs=-1)
+	cv=5,
+	n_jobs=-1, 
+    verbose=3)
 
 if not pca:
     nsamples, nx, ny = X_train.shape

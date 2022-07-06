@@ -225,11 +225,11 @@ if __name__ == '__main__':
     randomise = False
     get_key_frames = False
     remove_silence = True
-    remove_silence_percent = 0.4
+    remove_silence_percent = 0.35
     cmvn = True
 
-    run_pca = False
-    run_lda = True
+    run_pca = True
+    run_lda = False
     k_means = False
     split_files = False
     split_size=64
@@ -241,8 +241,8 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=250, 
-                    test_size=30, 
+                    limit=1000, 
+                    test_size=80, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
@@ -390,6 +390,8 @@ if __name__ == '__main__':
             X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
             x_test_pca = pca.transform(X_test_reshape)
             X_test_std = x_test_pca
+        
+        print("PCA variance ratio:", sum(pca.explained_variance_ratio_)) 
 
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
