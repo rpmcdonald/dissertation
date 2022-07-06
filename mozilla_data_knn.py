@@ -229,7 +229,7 @@ if __name__ == '__main__':
     cmvn = True
 
     run_pca = False
-    run_lda = False
+    run_lda = True
     k_means = False
     split_files = False
     split_size=64

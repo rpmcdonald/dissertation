@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 data = "moz"
 mfcc_shape = 39
 length = 128
-n_components = 3
-pca = False
+n_components = 1
+pca = True
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
@@ -31,8 +31,12 @@ grid_search = GridSearchCV(estimator=classifier,
 	cv=10,
 	n_jobs=-1)
 
-nsamples, nx, ny = X_train.shape
-X_train_reshape = X_train.reshape((nsamples,nx*ny))
+if not pca:
+    nsamples, nx, ny = X_train.shape
+    X_train_reshape = X_train.reshape((nsamples,nx*ny))
+else:
+    X_train_reshape = X_train
+
 y_train = np.ravel(y_train)
 
 # Find optimal model
@@ -49,9 +53,11 @@ else:
     model = SVC(kernel = best_parameters["kernel"], C = best_parameters["C"], gamma = best_parameters["gamma"], probability=True)
 model.fit(X_train_reshape, y_train)
 
-nsamples, nx, ny = X_test.shape
-X_test_reshape = X_test.reshape((nsamples,nx*ny))
-
+if not pca:
+    nsamples, nx, ny = X_test.shape
+    X_test_reshape = X_test.reshape((nsamples,nx*ny))
+else:
+    X_test_reshape = X_test
 y_predict = model.predict(X_test_reshape)
 y_test = np.ravel(y_test)
 
