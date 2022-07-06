@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 data = "moz"
 mfcc_shape = 39
 length = 128
-n_components = 3
-pca = False
+n_components = 1
+pca = True
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
@@ -25,12 +25,12 @@ print(X_train.shape, X_test.shape, len(y_train), len(y_test))
 parameters = [{'C' : [0.1,1,10,100,1000], 'kernel' : ['linear']},{'C' : [0.1,1,10,100,1000], 'kernel' : ['rbf'], 'gamma' : [0.5,0.1,0.01,0.001]}]
 classifier = SVC(kernel = 'linear', random_state=0,  C=1)
 
-grid_search = GridSearchCV(estimator=classifier,
+model = GridSearchCV(estimator=classifier,
 	param_grid=parameters,
 	scoring='accuracy',
 	cv=5,
 	n_jobs=-1, 
-    verbose=3)
+    verbose=2)
 
 if not pca:
     nsamples, nx, ny = X_train.shape
@@ -41,27 +41,22 @@ else:
 y_train = np.ravel(y_train)
 
 # Find optimal model
-grid_search = grid_search.fit(X_train_reshape,y_train)
-best_accuracy = grid_search.best_score_
+grid_search = model.fit(X_train_reshape,y_train)
+best_accuracy = model.best_score_
 print('\nBest Accuracy : \n{}'.format(best_accuracy))
-best_parameters = grid_search.best_params_
+best_parameters = model.best_params_
 print('\nBest Parameters : \n{}'.format(best_parameters))
-
-# Run optimal model on test data
-if best_parameters["kernel"] == "linear":
-    model = SVC(kernel = best_parameters["kernel"], C = best_parameters["C"], probability=True)
-else:
-    model = SVC(kernel = best_parameters["kernel"], C = best_parameters["C"], gamma = best_parameters["gamma"], probability=True)
-model.fit(X_train_reshape, y_train)
 
 if not pca:
     nsamples, nx, ny = X_test.shape
     X_test_reshape = X_test.reshape((nsamples,nx*ny))
 else:
     X_test_reshape = X_test
+
+
 y_predict = model.predict(X_test_reshape)
 y_test = np.ravel(y_test)
-
 print(f'Model Score: {model.score(X_test_reshape, y_test)}')
+print(f"Best params: {model.best_params_}")
 cm = confusion_matrix(y_test, y_predict)
 print(f'Confusion Matrix: \n{cm}')

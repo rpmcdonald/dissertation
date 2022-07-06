@@ -228,8 +228,8 @@ if __name__ == '__main__':
     remove_silence_percent = 0.35
     cmvn = True
 
-    run_pca = True
-    run_lda = False
+    run_pca = False
+    run_lda = True
     k_means = False
     split_files = False
     split_size=64
