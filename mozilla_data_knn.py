@@ -323,10 +323,6 @@ if __name__ == '__main__':
                 high += split_size
                 new_x.append(temp_mfccs)
             new_X_test.extend(new_x)
-        
-        # HALF THE DATA IS EMPTY
-        # for x in new_X_train:
-        #     print(x[0], x[1])
 
         y_train = np.array(new_y_train)
         y_test = np.array(new_y_test)
