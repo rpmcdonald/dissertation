@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 data = "moz"
 mfcc_shape = 39
 length = 64
-n_components = 3
-pca = False
+n_components = 32
+pca = True
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
@@ -52,7 +52,7 @@ if not pca:
     cm = confusion_matrix(y_test, y_predict)
     print(f'Confusion Matrix: \n{cm}')
 else:
-    model = GridSearchCV(KNeighborsClassifier(), grid_params, cv=5, n_jobs=-1, verbose=1)
+    model = GridSearchCV(KNeighborsClassifier(), grid_params, cv=5, n_jobs=-1, verbose=2)
     model.fit(X_train,y_train)
     y_predict = model.predict(X_test)
     y_test = np.ravel(y_test)
