@@ -140,7 +140,10 @@ class Mfcc():
         list_of_deltas = []
         list_of_d_deltas = []
         accent_df = self.df[self.df['accent']==self.accent]
-        accent_df = accent_df.sample(frac=1, random_state=0)
+        if self.randomise:
+            accent_df = accent_df.sample(frac=1)
+        else:
+            accent_df = accent_df.sample(frac=1, random_state=0)
         for wav in accent_df[self.col][:self.limit]:
             self.names.append(wav)
             file_name = f"..\experiments_data\mozilla\wavs\{wav}.wav"
@@ -220,7 +223,7 @@ if __name__ == '__main__':
 
     MFCCS = {}
     names = []
-    target_size=128
+    target_size=192
     mfcc_size=39
     randomise = False
     get_key_frames = False
@@ -228,10 +231,12 @@ if __name__ == '__main__':
     remove_silence_percent = 0.35
     cmvn = True
 
-    run_pca = False
-    run_lda = True
+    run_pca = True
+    pca_comps = 10
+    run_lda = False
     k_means = False
-    split_files = False
+    k_means_clusters = 3
+    split_files = True
     split_size=64
 
     if randomise == False:
@@ -350,7 +355,7 @@ if __name__ == '__main__':
         print("in PCA")
         if k_means:
             print("in k-means")
-            clusters = 3
+            clusters = k_means_clusters
             x_train_k_means = []
             kmeans = KMeans(n_clusters=clusters, random_state=0)
             for mfcc in X_train_std:
@@ -364,7 +369,7 @@ if __name__ == '__main__':
             x_train_k_means = np.array(x_train_k_means).reshape(-1, mfcc_size, clusters)
             x_test_k_means = np.array(x_test_k_means).reshape(-1, mfcc_size, clusters)
 
-            pca = PCA(n_components=3)
+            pca = PCA(n_components=pca_comps)
 
             nsamples, nx, ny = x_train_k_means.shape
             X_train_reshape = x_train_k_means.reshape((nsamples,nx*ny))
@@ -377,17 +382,25 @@ if __name__ == '__main__':
             x_test_pca = pca.transform(X_test_reshape)
             X_test_std = x_test_pca
         else:    
-            pca = PCA(n_components=3)
+            pca = PCA(n_components=pca_comps)
             #pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)]) # Can add this instead of pca below, gives different results and don't know why
+
+            scaler = StandardScaler()
 
             nsamples, nx, ny = X_train_std.shape
             X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
+            X_train_reshape = scaler.fit_transform(X_train_reshape)
+            
+            nsamples, nx, ny = X_test_std.shape
+            X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
+            X_test_reshape = scaler.transform(X_test_reshape)
+
+            
             x_train_pca = pca.fit_transform(X_train_reshape)
             print(X_train_std.shape, X_train_reshape.shape, x_train_pca.shape)
             X_train_std = x_train_pca
 
-            nsamples, nx, ny = X_test_std.shape
-            X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
+
             x_test_pca = pca.transform(X_test_reshape)
             X_test_std = x_test_pca
         

@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 
 data = "moz"
 mfcc_shape = 39
-length = 128
-n_components = 1
+length = 32
+n_components = 10
 pca = True
 
 if pca:
@@ -22,8 +22,9 @@ y_test = np.load(f'mfccs/y_test_{data}.npy')
 print(X_train.shape, X_test.shape, len(y_train), len(y_test))
 
 # Set up model parameters
-parameters = [{'C' : [0.1,1,10,100,1000], 'kernel' : ['linear']},{'C' : [0.1,1,10,100,1000], 'kernel' : ['rbf'], 'gamma' : [0.5,0.1,0.01,0.001]}]
-classifier = SVC(kernel = 'linear', random_state=0,  C=1)
+#parameters = [{'C' : [0.1,1,10,100,1000], 'kernel' : ['linear']},{'C' : [0.1,1,10,100,1000], 'kernel' : ['rbf'], 'gamma' : [0.5,0.1,0.01,0.001]}]
+parameters = [{'C' : [0.1,1,10,100,1000], 'kernel' : ['rbf'], 'gamma' : [0.5,0.1,0.01,0.001]}]
+classifier = SVC(kernel = 'rbf', random_state=0,  C=1)
 
 model = GridSearchCV(estimator=classifier,
 	param_grid=parameters,
@@ -42,10 +43,6 @@ y_train = np.ravel(y_train)
 
 # Find optimal model
 grid_search = model.fit(X_train_reshape,y_train)
-best_accuracy = model.best_score_
-print('\nBest Accuracy : \n{}'.format(best_accuracy))
-best_parameters = model.best_params_
-print('\nBest Parameters : \n{}'.format(best_parameters))
 
 if not pca:
     nsamples, nx, ny = X_test.shape
