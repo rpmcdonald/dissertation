@@ -98,6 +98,7 @@ class Mfcc():
         data_length = math.ceil(data_length * (1-rem_silence_percent))
         posns = list(zip(*sorted( [(x,i) for (i,x) in enumerate(rms)], 
                     reverse=True )[:data_length] ))[1]
+        posns = sorted(posns)
         return_mfcc = []
         return_delta = []
         return_d_delta = []
@@ -228,16 +229,16 @@ if __name__ == '__main__':
     randomise = False
     get_key_frames = False
     remove_silence = True
-    remove_silence_percent = 0.35
+    remove_silence_percent = 0.15
     cmvn = True
 
     run_pca = True
-    pca_comps = 32
+    pca_comps = 64
     pca_visualise = False
     run_lda = False
     k_means = False
     k_means_clusters = 3
-    split_files = True
+    split_files = False
     split_size=64
 
     if randomise == False:
@@ -247,7 +248,7 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=2000, 
+                    limit=4000, 
                     test_size=150, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 

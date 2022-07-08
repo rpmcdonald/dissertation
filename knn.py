@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 #data = "ssa"
 data = "moz"
 mfcc_shape = 39
-length = 64
-n_components = 32
+length = 128
+n_components = 16
 pca = True
+display = False
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
@@ -27,7 +28,7 @@ print(X_train.shape, X_test.shape, len(y_train), len(y_test))
 grid_params = {
     'n_neighbors': list(range(1, 15)),
     'weights': ['uniform', 'distance'],
-    'metric': ['euclidean', 'manhattan', 'minkowski', 'chebyshev'],
+    'metric': ['euclidean', 'manhattan', 'minkowski'],
     #'algorithm': ['ball_tree', 'kd_tree', 'brute']
 }
 y_train = np.ravel(y_train)
@@ -38,7 +39,7 @@ if not pca:
     X_train_reshape = X_train.reshape((nsamples,nx*ny))
 
     #print(X_train_reshape.shape)
-    model = GridSearchCV(KNeighborsClassifier(), grid_params, cv=5, n_jobs=-1, verbose=1)
+    model = GridSearchCV(KNeighborsClassifier(), grid_params, cv=5, n_jobs=-1, verbose=2)
     print(X_train_reshape.shape, y_train.shape)
     model.fit(X_train_reshape,y_train)
 
@@ -61,19 +62,20 @@ else:
     cm = confusion_matrix(y_test, y_predict)
     print(f'Confusion Matrix: \n{cm}')
 
-if data == "openslr83":
-    labels = ["we", "mi", "no", "sc", "so"]
-if data == "ssa":
-    #labels = ["usa", "ch", "uk", "ind", "can", "kor"]
-    #labels = ["usa", "ch"]
-    labels = ["sa", "aus", "sk"]
-    #labels = ["sa", "aus", "ch", "tur", "bra", "sk"]
-else:
-    labels = model.classes_
+if display:
+    if data == "openslr83":
+        labels = ["we", "mi", "no", "sc", "so"]
+    if data == "ssa":
+        #labels = ["usa", "ch", "uk", "ind", "can", "kor"]
+        #labels = ["usa", "ch"]
+        labels = ["sa", "aus", "sk"]
+        #labels = ["sa", "aus", "ch", "tur", "bra", "sk"]
+    else:
+        labels = model.classes_
 
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
-disp.plot()
-plt.show()
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+    disp.plot()
+    plt.show()
 
 
 # --- SVM
