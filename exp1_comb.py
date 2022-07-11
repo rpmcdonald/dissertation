@@ -8,7 +8,7 @@ data = "moz"
 mfcc_shape = 39
 length = 128
 n_components = 64
-pca = True
+pca = False
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)

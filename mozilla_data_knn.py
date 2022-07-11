@@ -232,7 +232,7 @@ if __name__ == '__main__':
     remove_silence_percent = 0.15
     cmvn = True
 
-    run_pca = True
+    run_pca = False
     pca_comps = 64
     pca_visualise = False
     run_lda = False
