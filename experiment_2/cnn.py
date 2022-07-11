@@ -60,12 +60,14 @@ model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
 model.add(Dense(64))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
-model.add(Dense(3))
+model.add(Dense(classes))
 model.add(Activation('softmax'))
 
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adagrad(lr=0.01),
               metrics=['accuracy'])
+
+print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 
 history = model.fit(X_train, y_train_hot, batch_size=128, epochs=100, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
