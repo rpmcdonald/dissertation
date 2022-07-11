@@ -7,8 +7,8 @@ import numpy as np
 data = "moz"
 mfcc_shape = 39
 length = 128
-n_components = 64
-pca = False
+n_components = 8
+pca = True
 
 if pca:
     X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, n_components)
@@ -51,10 +51,10 @@ parameters = [{'C' : [0.1,1,10,100,1000], 'kernel' : ['rbf'], 'gamma' : [0.5,0.1
 classifier = SVC(kernel = 'rbf', random_state=0,  C=1)
 
 model = GridSearchCV(estimator=classifier,
-	param_grid=parameters,
-	scoring='accuracy',
-	cv=5,
-	n_jobs=-1, 
+    param_grid=parameters,
+    scoring='accuracy',
+    cv=5,
+    n_jobs=-1, 
     verbose=1)
 
 grid_search = model.fit(X_train_reshape,y_train)

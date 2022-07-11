@@ -54,7 +54,7 @@ class Mfcc():
     def mp3towav(self):
         accent_df = self.df[self.df['accent']==self.accent]
         for filename in tqdm(accent_df[self.col]):
-            pydub.AudioSegment.from_mp3(f"../experiments_data/mozilla/org_mp3/{filename}.mp3").export(f"../experiments_data/mozilla/wavs/{filename}.wav", format="wav")
+            pydub.AudioSegment.from_mp3(f"../../experiments_data/mozilla/org_mp3/{filename}.mp3").export(f"../../experiments_data/mozilla/wavs/{filename}.wav", format="wav")
 
     def get_key_frames(self, mfcc, delta, d_delta, rms, n):
         rms = rms.reshape(-1)
@@ -147,7 +147,7 @@ class Mfcc():
             accent_df = accent_df.sample(frac=1, random_state=0)
         for wav in accent_df[self.col][:self.limit]:
             self.names.append(wav)
-            file_name = f"..\experiments_data\mozilla\wavs\{wav}.wav"
+            file_name = f"../..\experiments_data\mozilla\wavs\{wav}.wav"
             mfcc, delta, d_delta = self.wavtomfcc(file_name)
 
             list_of_mfccs.append(mfcc)
@@ -219,7 +219,7 @@ class Mfcc():
 if __name__ == '__main__':
     #ACCENTS = ["canada", "australia", "indian"]
     ACCENTS = ["canada", "australia", "indian"]
-    df = clean_df('../experiments_data/mozilla/validated_full.csv')
+    df = clean_df('../../experiments_data/mozilla/validated_full.csv')
     print("DF created")
 
     MFCCS = {}
@@ -448,7 +448,7 @@ if __name__ == '__main__':
         # plt.show()
 
 
-    np.save(f'mfccs/X_train_moz.npy', X_train_std)
-    np.save(f'mfccs/X_test_moz.npy', X_test_std)
-    np.save(f'mfccs/y_train_moz.npy', y_train)
-    np.save(f'mfccs/y_test_moz.npy', y_test)
+    np.save(f'../mfccs/X_train_moz.npy', X_train_std)
+    np.save(f'../mfccs/X_test_moz.npy', X_test_std)
+    np.save(f'../mfccs/y_train_moz.npy', y_train)
+    np.save(f'../mfccs/y_test_moz.npy', y_test)
