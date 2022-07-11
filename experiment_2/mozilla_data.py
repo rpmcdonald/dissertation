@@ -54,16 +54,12 @@ class Mfcc():
     def mp3towav(self):
         accent_df = self.df[self.df['accent']==self.accent]
         for filename in tqdm(accent_df[self.col]):
-            pydub.AudioSegment.from_mp3(f"../../experiments_data/mozilla/org_mp3/{filename}.mp3").export(f"../../experiments_data/mozilla/wavs/{filename}.wav", format="wav")
+            pydub.AudioSegment.from_mp3(f"../experiments_data/mozilla/org_mp3/{filename}.mp3").export(f"../experiments_data/mozilla/wavs/{filename}.wav", format="wav")
 
     def get_key_frames(self, mfcc, delta, d_delta, rms, n):
         rms = rms.reshape(-1)
-        values = list(zip(*sorted( [(x,i) for (i,x) in enumerate(rms)], 
-                    reverse=True )[:n*3] ))[0]
         posns = list(zip(*sorted( [(x,i) for (i,x) in enumerate(rms)], 
                     reverse=True )[:n*3] ))[1] 
-        #print(values)
-        #print(posns)
         # Make sure highest values are not next to each other
         cleaned_pos = []
         for i in posns:
@@ -74,7 +70,6 @@ class Mfcc():
                     break
             else:
                 cleaned_pos.append(i)
-        #print(cleaned_pos)
         return_mfcc = []
         return_delta = []
         return_d_delta = []
@@ -123,14 +118,11 @@ class Mfcc():
         win_length=2048
         # defaults n_fft=2048 hop_length=512 win_length=2048
         mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13, win_length=win_length, hop_length=hop_length, n_fft=n_fft) # format is (n_mfcc, )
-        #sys.exit("End")
         delta = librosa.feature.delta(mfcc)
         d_delta = librosa.feature.delta(mfcc, order=2)
         if self.gkf:
             rms = librosa.feature.rms(y=wave)
-            #print(mfcc.shape, rms.shape)
             mfcc, delta, d_delta = self.get_key_frames(mfcc, delta, d_delta, rms, self.frames)
-            #print(mfcc.shape)
         if self.rem_silence:
             rms = librosa.feature.rms(y=wave)
             mfcc, delta, d_delta = self.remove_silence(mfcc, delta, d_delta, rms, self.rem_silence_percent)
@@ -147,7 +139,7 @@ class Mfcc():
             accent_df = accent_df.sample(frac=1, random_state=0)
         for wav in accent_df[self.col][:self.limit]:
             self.names.append(wav)
-            file_name = f"../..\experiments_data\mozilla\wavs\{wav}.wav"
+            file_name = f"..\experiments_data\mozilla\wavs\{wav}.wav"
             mfcc, delta, d_delta = self.wavtomfcc(file_name)
 
             list_of_mfccs.append(mfcc)
@@ -188,28 +180,37 @@ class Mfcc():
     def split_data(self):
         if self.randomise:
             X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=self.test_size)
+            X_test, X_val, y_test, y_val = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=int(self.test_size/2))
         else:
             X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
+            X_test, X_val, y_test, y_val = train_test_split(self.X, self.y, shuffle = False, test_size=int(self.test_size/2))
         
         if not self.gkf:
             self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.target_size)
             print("X_train shape", self.X_train.shape)
             self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.target_size)
             print("X_test shape", self.X_test.shape)
+            self.X_val = np.array(X_val).reshape(-1, self.mfcc_size, self.target_size)
+            print("X_val shape", self.X_val.shape)
         else:
             self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.frames)
             print("X_train shape", self.X_train.shape)
             self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.frames)
             print("X_test shape", self.X_test.shape)
+            self.X_val = np.array(X_val).reshape(-1, self.mfcc_size, self.frames)
+            print("X_val shape", self.X_val.shape)
         self.y_train = np.array(y_train).reshape(-1, 1)
         self.y_test = np.array(y_test).reshape(-1,1)
+        self.y_val = np.array(y_val).reshape(-1,1)
 
     def save_mfccs(self):
         MFCCS[self.accent[0]] = {
             "x_train": self.X_train,
             "x_test": self.X_test,
+            "x_val": self.X_val,
             "y_train": self.y_train,
             "y_test": self.y_test,
+            "y_val": self.y_val
         }
     
     def return_names(self):
@@ -218,8 +219,8 @@ class Mfcc():
 
 if __name__ == '__main__':
     #ACCENTS = ["canada", "australia", "indian"]
-    ACCENTS = ["canada", "australia", "indian"]
-    df = clean_df('../../experiments_data/mozilla/validated_full.csv')
+    ACCENTS = ["canada", "australia"]
+    df = clean_df('..\experiments_data\mozilla\\validated_full.csv')
     print("DF created")
 
     MFCCS = {}
@@ -232,12 +233,7 @@ if __name__ == '__main__':
     remove_silence_percent = 0.3
     cmvn = True
 
-    run_pca = True
-    pca_comps = 8
-    pca_visualise = False
-    run_lda = False
-    k_means = False
-    k_means_clusters = 3
+    # This isn't updated for val yet
     split_files = False
     split_size=64
 
@@ -248,8 +244,8 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=2000, 
-                    test_size=150, 
+                    limit=500, 
+                    test_size=60, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
@@ -269,14 +265,18 @@ if __name__ == '__main__':
 
     X_train = MFCCS[keys[0]]["x_train"]
     X_test = MFCCS[keys[0]]["x_test"]
+    X_val = MFCCS[keys[0]]["x_val"]
     y_train = MFCCS[keys[0]]["y_train"]
     y_test = MFCCS[keys[0]]["y_test"]
+    y_val = MFCCS[keys[0]]["y_val"]
 
     for k in keys[1:]:
         X_train = np.concatenate((X_train, MFCCS[k]["x_train"]))
         X_test = np.concatenate((X_test, MFCCS[k]["x_test"]))
+        X_val = np.concatenate((X_val, MFCCS[k]["x_val"]))
         y_train = np.concatenate((y_train, MFCCS[k]["y_train"]))
         y_test = np.concatenate((y_test, MFCCS[k]["y_test"]))
+        y_val = np.concatenate((y_val, MFCCS[k]["y_val"]))
 
     # Split the files into smaller chunks
     if split_files:
@@ -338,117 +338,11 @@ if __name__ == '__main__':
     # Whiten over each file seperately
     X_train_std=whiten(X_train.transpose()).transpose()
     X_test_std=whiten(X_test.transpose()).transpose()
+    X_val_std=whiten(X_val.transpose()).transpose()
 
-    # Visualise standarised data
-    # y = []
-    # for x in X_train_std[0]:
-    #     for i in x:
-    #         y.append(i)
-
-    # plt.hist(y, bins=100)
-    # plt.show()
-
-    # ---PCA
-    if run_pca:
-        print("in PCA")
-        if k_means:
-            print("in k-means")
-            clusters = k_means_clusters
-            x_train_k_means = []
-            kmeans = KMeans(n_clusters=clusters, random_state=0)
-            for mfcc in X_train_std:
-                k = kmeans.fit_transform(mfcc)
-                x_train_k_means.append(k)
-            x_test_k_means = []
-            for mfcc in X_test_std:
-                k = kmeans.transform(mfcc)
-                x_test_k_means.append(k)
-
-            x_train_k_means = np.array(x_train_k_means).reshape(-1, mfcc_size, clusters)
-            x_test_k_means = np.array(x_test_k_means).reshape(-1, mfcc_size, clusters)
-
-            pca = PCA(n_components=pca_comps)
-
-            nsamples, nx, ny = x_train_k_means.shape
-            X_train_reshape = x_train_k_means.reshape((nsamples,nx*ny))
-            x_train_pca = pca.fit_transform(X_train_reshape)
-            print(X_train_std.shape, x_train_k_means.shape, x_train_pca.shape)
-            X_train_std = x_train_pca
-
-            nsamples, nx, ny = x_test_k_means.shape
-            X_test_reshape = x_test_k_means.reshape((nsamples,nx*ny))
-            x_test_pca = pca.transform(X_test_reshape)
-            X_test_std = x_test_pca
-        else:    
-            pca = PCA(n_components=pca_comps)
-            #pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)]) # Can add this instead of pca below, gives different results and don't know why
-
-            scaler = StandardScaler()
-
-            nsamples, nx, ny = X_train_std.shape
-            X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
-            X_train_reshape = scaler.fit_transform(X_train_reshape)
-            
-            nsamples, nx, ny = X_test_std.shape
-            X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
-            X_test_reshape = scaler.transform(X_test_reshape)
-
-            
-            x_train_pca = pca.fit_transform(X_train_reshape)
-            print(X_train_std.shape, X_train_reshape.shape, x_train_pca.shape)
-            X_train_std = x_train_pca
-
-
-            x_test_pca = pca.transform(X_test_reshape)
-            X_test_std = x_test_pca
-        
-        print("PCA variance ratio:", sum(pca.explained_variance_ratio_)) 
-
-        if pca_visualise:
-            fig = plt.figure()
-            ax = fig.add_subplot(projection='3d')
-            scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
-            legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
-            ax.add_artist(legend1)
-            plt.show()
-
-            # print(y_train.shape)
-            # graph_y_train = y_train.reshape(-1)
-            # print(graph_y_train)
-
-            def interactive_3d_plot(data, names):
-                scatt = py_go.Scatter3d(x=data[:, 0], y=data[:, 1], z=data[:, 2], mode="markers", text=names)
-                data = py_go.Data([scatt])
-                layout = py_go.Layout(title="Anomaly detection")
-                figure = py_go.Figure(data=data, layout=layout)
-                py_o.iplot(figure)
-
-            interactive_3d_plot(x_train_pca, names)
-
-    # --- LDA
-    if run_lda:
-        print("in LDA")
-        lda = LinearDiscriminantAnalysis()
-        nsamples, nx, ny = X_train_std.shape
-        X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
-        lda.fit(X_train_reshape, y_train.reshape(-1))
-        # IS THIS RIGHT?
-        X_train_std = lda.transform(X_train_reshape)
-        #print(X_train_std.shape)
-
-        nsamples, nx, ny = X_test_std.shape
-        X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
-        X_test_std = lda.transform(X_test_reshape)
-
-        # fig = plt.figure()
-        # ax = fig.add_subplot()
-        # scatter = ax.scatter(X_train_std[:,0], X_train_std[:,1], c=y_train)
-        # legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
-        # ax.add_artist(legend1)
-        # plt.show()
-
-
-    np.save(f'../mfccs/X_train_moz.npy', X_train_std)
-    np.save(f'../mfccs/X_test_moz.npy', X_test_std)
-    np.save(f'../mfccs/y_train_moz.npy', y_train)
-    np.save(f'../mfccs/y_test_moz.npy', y_test)
+    np.save(f'mfccs/X_train_moz.npy', X_train_std)
+    np.save(f'mfccs/X_test_moz.npy', X_test_std)
+    np.save(f'mfccs/X_val_moz.npy', X_val_std)
+    np.save(f'mfccs/y_train_moz.npy', y_train)
+    np.save(f'mfccs/y_test_moz.npy', y_test)
+    np.save(f'mfccs/y_val_moz.npy', y_val)
