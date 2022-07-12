@@ -71,29 +71,12 @@ class Mfcc():
             list_of_specs.append(spectrogram)
         self.list_of_spectrograms = list_of_specs
 
-        print("len of spectrograms", len(self.list_of_spectrograms))
+        print("len of spectrograms", len(self.list_of_spectrograms), "size:", self.list_of_spectrograms[0].shape)
         # librosa.display.specshow(librosa.power_to_db(self.list_of_spectrograms[0], ref=np.max))
         # plt.show()
 
     def resize_spectrograms(self):
-        combined = []
-        for i in range(len(self.list_of_mfccs)):
-            comb = np.concatenate((self.list_of_mfccs[i], self.list_of_deltas[i], self.list_of_d_deltas[i]))
-            if comb.shape[1] < target_size: # This will remove anything which is smaller than the target size so it isn't padded with zeroes
-                pass
-            else:
-                combined.append(comb)
-        if not self.gkf:
-            resized = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1) for mfcc in combined]
-        else:
-            resized = [librosa.util.fix_length(mfcc, size=self.frames, axis=1) for mfcc in combined]
-        print("len of mfccs reshaped", len(self.list_of_mfccs))
-        print("Single mfcc reshaped shape:", resized[0].shape)
-        
-        # resized = np.array(resized).reshape(-1, self.mfcc_size, self.target_size)
-        # print(resized.shape)
-        if self.cmvn:
-            resized = [speechpy.processing.cmvn(x, variance_normalization=False) for x in resized]
+        resized = [librosa.util.fix_length(mfcc, size=self.target_size, axis=1) for mfcc in self.list_of_spectrograms]
         self.X = resized
 
     def label_samples(self):
@@ -106,22 +89,13 @@ class Mfcc():
         else:
             X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
             X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=int(self.test_size/3))
-        
-        if not self.gkf:
-            self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.target_size)
-            print("X_train shape", self.X_train.shape)
-            self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.target_size)
-            print("X_test shape", self.X_test.shape)
-            self.X_val = np.array(X_val).reshape(-1, self.mfcc_size, self.target_size)
-            print("X_val shape", self.X_val.shape)
-        else:
-            self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.frames)
-            print("X_train shape", self.X_train.shape)
-            self.X_test = np.array(X_test).reshape(-1, self.mfcc_size, self.frames)
-            print("X_test shape", self.X_test.shape)
-            self.X_val = np.array(X_val).reshape(-1, self.mfcc_size, self.frames)
-            print("X_val shape", self.X_val.shape)
-        self.y_train = np.array(y_train).reshape(-1, 1)
+        self.X_train = np.array(X_train).reshape(-1, 128, self.target_size)
+        print("X_train shape", self.X_train.shape)
+        self.X_test = np.array(X_test).reshape(-1, 128, self.target_size)
+        print("X_test shape", self.X_test.shape)
+        self.X_val = np.array(X_val).reshape(-1, 128, self.target_size)
+        print("X_val shape", self.X_val.shape)
+        self.y_train = np.array(y_train).reshape(-1,1)
         self.y_test = np.array(y_test).reshape(-1,1)
         self.y_val = np.array(y_val).reshape(-1,1)
 
@@ -147,7 +121,7 @@ if __name__ == '__main__':
 
     MFCCS = {}
     names = []
-    target_size=128
+    target_size = 256
     randomise = False
 
     if randomise == False:
@@ -164,8 +138,8 @@ if __name__ == '__main__':
                     )
         # mfcc.mp3towav()
         mfcc.create_spectrograms()
-        # mfcc.resize_spectrograms()
-        # mfcc.label_samples()
-        # mfcc.split_data()
+        mfcc.resize_spectrograms()
+        mfcc.label_samples()
+        mfcc.split_data()
         # mfcc.save_mfccs()
         # names += mfcc.return_names()
