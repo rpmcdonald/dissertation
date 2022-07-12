@@ -229,10 +229,11 @@ if __name__ == '__main__':
     mfcc_size=39
     randomise = False
     get_key_frames = False
-    remove_silence = True
+    remove_silence = False
     remove_silence_percent = 0.15
     cmvn = True
 
+    # This isn't updated for val yet
     split_files = False
     split_size=64
 
