@@ -244,8 +244,8 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=2000, 
-                    test_size=200, 
+                    limit=4000, 
+                    test_size=300, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
