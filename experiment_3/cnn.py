@@ -18,16 +18,16 @@ from keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling
 # model = load_model('../models/final_model_3.h5')
 
 data = "moz"
-mfcc_shape = 39
-length = 128
+spectrogram_shape = 128
+length = 256
 classes = 2
 
-X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
-X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length, 1)
-X_val = np.load(f'mfccs/X_val_{data}.npy').reshape(-1, mfcc_shape, length, 1)
-y_train = np.load(f'mfccs/y_train_{data}.npy')
-y_test = np.load(f'mfccs/y_test_{data}.npy')
-y_val = np.load(f'mfccs/y_val_{data}.npy')
+X_train = np.load(f'spectrograms/X_train_{data}.npy').reshape(-1, spectrogram_shape, length, 1)
+X_test = np.load(f'spectrograms/X_test_{data}.npy').reshape(-1, spectrogram_shape, length, 1)
+X_val = np.load(f'spectrograms/X_val_{data}.npy').reshape(-1, spectrogram_shape, length, 1)
+y_train = np.load(f'spectrograms/y_train_{data}.npy')
+y_test = np.load(f'spectrograms/y_test_{data}.npy')
+y_val = np.load(f'spectrograms/y_val_{data}.npy')
 
 print(X_train.shape, X_test.shape, X_val.shape, len(y_train), len(y_test), len(y_val))
 
@@ -38,7 +38,7 @@ y_val_hot = to_categorical(y_val, num_classes=classes)
 callbacks = [TensorBoard(log_dir='./logs')]
 
 model = Sequential()
-model.add(Conv2D(16, (3, 3), input_shape=(mfcc_shape, length, 1)))
+model.add(Conv2D(16, (3, 3), input_shape=(spectrogram_shape, length, 1)))
 model.add(Activation('relu'))
 model.add(Conv2D(16, (3, 3)))
 model.add(Activation('relu'))
@@ -69,7 +69,7 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=150, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=128, epochs=100, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 

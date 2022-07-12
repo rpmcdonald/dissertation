@@ -33,7 +33,7 @@ def clean_df(file):
     return output_df
 
 
-class Mfcc():
+class Spectrogram():
 
     def __init__(self, df, accent, limit, test_size, target_size, randomise):
         self.df = df
@@ -43,7 +43,6 @@ class Mfcc():
         self.target_size = target_size
         self.test_size = test_size
         self.randomise = randomise
-        self.names = []
 
     def mp3towav(self):
         accent_df = self.df[self.df['accent']==self.accent]
@@ -65,7 +64,6 @@ class Mfcc():
         
         list_of_specs = []
         for wav in accent_df[self.col][:self.limit]:
-            self.names.append(wav)
             file_name = f"..\experiments_data\mozilla\wavs\{wav}.wav"
             spectrogram = self.wav_to_spectrogram(file_name)
             list_of_specs.append(spectrogram)
@@ -100,7 +98,7 @@ class Mfcc():
         self.y_val = np.array(y_val).reshape(-1,1)
 
     def save_mfccs(self):
-        MFCCS[self.accent[0]] = {
+        SPECTROGRAMS[self.accent[0]] = {
             "x_train": self.X_train,
             "x_test": self.X_test,
             "x_val": self.X_val,
@@ -108,9 +106,6 @@ class Mfcc():
             "y_test": self.y_test,
             "y_val": self.y_val
         }
-    
-    def return_names(self):
-        return self.names
 
 
 if __name__ == '__main__':
@@ -119,8 +114,7 @@ if __name__ == '__main__':
     df = clean_df('..\experiments_data\mozilla\\validated_full.csv')
     print("DF created")
 
-    MFCCS = {}
-    names = []
+    SPECTROGRAMS = {}
     target_size = 256
     randomise = False
 
@@ -129,17 +123,46 @@ if __name__ == '__main__':
 
     for accent in ACCENTS:
         print(accent)
-        mfcc = Mfcc(df=df, 
+        spectrograms = Spectrogram(df=df, 
                     accent=accent, 
-                    limit=200, 
-                    test_size=30, 
+                    limit=1000, 
+                    test_size=150, 
                     target_size=target_size, 
                     randomise=randomise
                     )
-        # mfcc.mp3towav()
-        mfcc.create_spectrograms()
-        mfcc.resize_spectrograms()
-        mfcc.label_samples()
-        mfcc.split_data()
-        # mfcc.save_mfccs()
-        # names += mfcc.return_names()
+        # spectrograms.mp3towav()
+        spectrograms.create_spectrograms()
+        spectrograms.resize_spectrograms()
+        spectrograms.label_samples()
+        spectrograms.split_data()
+        spectrograms.save_mfccs()
+
+    keys = list(SPECTROGRAMS.keys())
+
+    X_train = SPECTROGRAMS[keys[0]]["x_train"]
+    X_test = SPECTROGRAMS[keys[0]]["x_test"]
+    X_val = SPECTROGRAMS[keys[0]]["x_val"]
+    y_train = SPECTROGRAMS[keys[0]]["y_train"]
+    y_test = SPECTROGRAMS[keys[0]]["y_test"]
+    y_val = SPECTROGRAMS[keys[0]]["y_val"]
+
+    for k in keys[1:]:
+        X_train = np.concatenate((X_train, SPECTROGRAMS[k]["x_train"]))
+        X_test = np.concatenate((X_test, SPECTROGRAMS[k]["x_test"]))
+        X_val = np.concatenate((X_val, SPECTROGRAMS[k]["x_val"]))
+        y_train = np.concatenate((y_train, SPECTROGRAMS[k]["y_train"]))
+        y_test = np.concatenate((y_test, SPECTROGRAMS[k]["y_test"]))
+        y_val = np.concatenate((y_val, SPECTROGRAMS[k]["y_val"]))
+
+    # ---Standardise
+    # Whiten over each file seperately
+    X_train_std=whiten(X_train.transpose()).transpose()
+    X_test_std=whiten(X_test.transpose()).transpose()
+    X_val_std=whiten(X_val.transpose()).transpose()
+
+    np.save(f'spectrograms/X_train_moz.npy', X_train_std)
+    np.save(f'spectrograms/X_test_moz.npy', X_test_std)
+    np.save(f'spectrograms/X_val_moz.npy', X_val_std)
+    np.save(f'spectrograms/y_train_moz.npy', y_train)
+    np.save(f'spectrograms/y_test_moz.npy', y_test)
+    np.save(f'spectrograms/y_val_moz.npy', y_val)
