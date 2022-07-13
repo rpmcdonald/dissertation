@@ -83,10 +83,10 @@ class Spectrogram():
     def split_data(self):
         if self.randomise:
             X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=self.test_size)
-            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=int(self.test_size/3))
+            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=int(self.test_size/2))
         else:
             X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
-            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=int(self.test_size/3))
+            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=int(self.test_size/2))
         self.X_train = np.array(X_train).reshape(-1, 128, self.target_size)
         print("X_train shape", self.X_train.shape)
         self.X_test = np.array(X_test).reshape(-1, 128, self.target_size)
@@ -125,8 +125,8 @@ if __name__ == '__main__':
         print(accent)
         spectrograms = Spectrogram(df=df, 
                     accent=accent, 
-                    limit=1000, 
-                    test_size=150, 
+                    limit=4000, 
+                    test_size=600, 
                     target_size=target_size, 
                     randomise=randomise
                     )
