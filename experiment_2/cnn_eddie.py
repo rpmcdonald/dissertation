@@ -7,7 +7,6 @@ from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D,
 
 import numpy as np
 import matplotlib.pyplot as plt
-# model = load_model('../models/final_model_3.h5')
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -21,7 +20,6 @@ if gpus:
   except RuntimeError as e:
     # Virtual devices must be set before GPUs have been initialized
     print(e)
-
 
 data = "moz"
 mfcc_shape = 39

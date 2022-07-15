@@ -5,16 +5,8 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 
-# import keras
-# from keras.callbacks import TensorBoard
-# from keras.utils import to_categorical
-# from keras.models import Sequential
-# from keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D
-
 import numpy as np
 import matplotlib.pyplot as plt
-
-# model = load_model("../models/final_model_3.h5")
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
