@@ -5,15 +5,17 @@ from keras.callbacks import Callback
 import tensorflow as tf
 import keras.backend as K
 import matplotlib.pyplot as plt
+import librosa
+import librosa.display
+import IPython.display
+import sklearn.preprocessing
+import pydub
 from keras.utils import to_categorical
 import keras
 from keras.models import Sequential
 from keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D
-import torch
 
 # model = load_model("../models/final_model_3.h5")
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 data = "moz"
 spectrogram_shape = 128
@@ -43,13 +45,7 @@ y_val_hot = to_categorical(y_val, num_classes=classes)
 callbacks = [TensorBoard(log_dir="./logs")]
 
 model = Sequential()
-model.add(Conv2D(32, (5, 5), input_shape=(spectrogram_shape, length, 1)))
-model.add(Activation("relu"))
-model.add(Conv2D(16, (3, 3)))
-model.add(Activation("relu"))
-model.add(MaxPooling2D(pool_size=(3, 3)))
-
-model.add(Conv2D(16, (3, 3)))
+model.add(Conv2D(16, (3, 3), input_shape=(spectrogram_shape, length, 1)))
 model.add(Activation("relu"))
 model.add(Conv2D(16, (3, 3)))
 model.add(Activation("relu"))
@@ -111,7 +107,7 @@ plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
 
 plt.tight_layout()
-plt.savefig("three_class_plots_CNN.png")
+plt.savefig("three_class_plots.png")
 plt.show()
 
 # what really optimized my model: smaller learning rate, larger number of epochs,

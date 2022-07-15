@@ -180,10 +180,10 @@ class Mfcc():
     def split_data(self):
         if self.randomise:
             X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=self.test_size)
-            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=int(self.test_size/3))
+            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=int(self.test_size/2))
         else:
             X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
-            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=int(self.test_size/3))
+            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=int(self.test_size/2))
         
         if not self.gkf:
             self.X_train = np.array(X_train).reshape(-1, self.mfcc_size, self.target_size)
@@ -225,13 +225,13 @@ if __name__ == '__main__':
 
     MFCCS = {}
     names = []
-    target_size=128
+    target_size=256
     mfcc_size=39
     randomise = False
     get_key_frames = False
-    remove_silence = True
+    remove_silence = False
     remove_silence_percent = 0.15
-    cmvn = True
+    cmvn = False
 
     split_files = False
     split_size=64
@@ -244,7 +244,7 @@ if __name__ == '__main__':
         mfcc = Mfcc(df=df, 
                     accent=accent, 
                     limit=4000, 
-                    test_size=300, 
+                    test_size=600, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
