@@ -25,7 +25,7 @@ if gpus:
     print(e)
 
 mfcc_shape = 39
-length = 256
+length = 192
 classes = 2
 
 X_train = np.load("mfccs/X_train_moz.npy").reshape(-1, mfcc_shape, length, 1)
@@ -58,8 +58,7 @@ model.add(Conv2D(16, (1, 1)))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 model.add(Flatten())
-model.add(Dense(classes, activation="relu"))
-model.add(Activation('softmax'))
+model.add(Dense(classes, activation="softmax"))
 
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adagrad(lr=0.01),
