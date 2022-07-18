@@ -66,7 +66,7 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=150, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=128, epochs=200, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
