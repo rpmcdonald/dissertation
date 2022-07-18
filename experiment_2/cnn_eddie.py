@@ -23,7 +23,7 @@ if gpus:
 
 data = "moz"
 mfcc_shape = 39
-length = 256
+length = 192
 classes = 2
 
 X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)

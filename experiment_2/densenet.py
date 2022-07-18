@@ -9,6 +9,7 @@ from tensorflow.keras.applications import DenseNet121, DenseNet169
 
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -64,6 +65,7 @@ model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adagrad(lr=0.01),
               metrics=["accuracy"])
 
+#model.summary()
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 
 history = model.fit(X_train, y_train_hot, batch_size=128, epochs=200, verbose=1,
