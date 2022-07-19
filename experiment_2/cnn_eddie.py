@@ -3,7 +3,7 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization
+from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Add, ReLU
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,6 +38,15 @@ print(X_train.shape, X_test.shape, X_val.shape, len(y_train), len(y_test), len(y
 y_train_hot = to_categorical(y_train, num_classes=classes)
 y_test_hot = to_categorical(y_test, num_classes=classes)
 y_val_hot = to_categorical(y_val, num_classes=classes)
+
+def resblock(x, kernelsize, filters):
+    fx = Conv2D(filters, kernelsize, activation='relu', padding='same')(x)
+    fx = BatchNormalization()(fx)
+    fx = Conv2D(filters, kernelsize, padding='same')(fx)
+    out = Add()([x,fx])
+    out = ReLU()(out)
+    out = BatchNormalization()(out)
+    return out
 
 callbacks = [TensorBoard(log_dir='./logs')]
 
