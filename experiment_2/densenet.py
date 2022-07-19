@@ -4,7 +4,7 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D
+from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization
 from tensorflow.keras.applications import DenseNet121, DenseNet169
 
 import numpy as np
@@ -43,18 +43,22 @@ callbacks = [TensorBoard(log_dir="./logs")]
 
 model = Sequential()
 model.add(Conv2D(16, (7, 7), input_shape=(mfcc_shape, length, 1)))
+BatchNormalization()
 model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Dense(classes*8, activation="relu"))
 
 model.add(Conv2D(16, (1, 1)))
+BatchNormalization()
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dense(classes*4, activation="relu"))
 
 model.add(Conv2D(16, (1, 1)))
+BatchNormalization()
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dense(classes*2, activation="relu"))
 
 model.add(Conv2D(16, (1, 1)))
+BatchNormalization()
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 model.add(Flatten())
@@ -67,7 +71,7 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 #model.summary()
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=200, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=128, epochs=500, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
