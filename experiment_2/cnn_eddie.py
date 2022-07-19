@@ -39,15 +39,6 @@ y_train_hot = to_categorical(y_train, num_classes=classes)
 y_test_hot = to_categorical(y_test, num_classes=classes)
 y_val_hot = to_categorical(y_val, num_classes=classes)
 
-def resblock(x, kernelsize, filters):
-    fx = Conv2D(filters, kernelsize, activation='relu', padding='same')(x)
-    fx = BatchNormalization()(fx)
-    fx = Conv2D(filters, kernelsize, padding='same')(fx)
-    out = Add()([x,fx])
-    out = ReLU()(out)
-    out = BatchNormalization()(out)
-    return out
-
 callbacks = [TensorBoard(log_dir='./logs')]
 
 model = Sequential()
