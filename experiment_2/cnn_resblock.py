@@ -89,43 +89,41 @@ def residual_stack(input, filters):
 
     c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
     lrelu1 = LeakyReLU()(c1)
-    c2 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu1)
-    add1 = Add()([c2, input_c])
+    add1 = Add()([lrelu1, input_c])
 
     lrelu2 = LeakyReLU()(add1)
     c3 = Conv2D(filters, 3, dilation_rate=3, padding="same")(lrelu2)
     lrelu3 = LeakyReLU()(c3)
-    c4 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu3)
-    add2 = Add()([add1, c4])
+    add2 = Add()([add1, lrelu3])
 
     lrelu4 = LeakyReLU()(add2)
     c5 = Conv2D(filters, 3, dilation_rate=9, padding="same")(lrelu4)
     lrelu5 = LeakyReLU()(c5)
-    c6 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu5)
-    add3 = Add()([c6, add2])
+    add3 = Add()([lrelu5, add2])
 
     return add3
 
 def create_res_net():
     
     inputs = Input(shape=(mfcc_shape, length, 1))
-    num_filters = 8
+    num_filters = 16
     
-    #t = BatchNormalization()(inputs)
     t = Conv2D(kernel_size=(3, 3),
                strides=1,
                filters=num_filters,
-               padding="same")(t)
+               padding="same")(inputs)
     t = relu_bn(t)
     
     #num_blocks_list = [2, 5, 5, 2]
     #num_blocks_list = [2, 4, 2]
-    num_blocks_list = [1]
-    for i in range(len(num_blocks_list)):
-        num_blocks = num_blocks_list[i]
-        for j in range(num_blocks):
-            t = residual_stack(t, filters=num_filters)
-        num_filters *= 2
+    # num_blocks_list = [1]
+    # for i in range(len(num_blocks_list)):
+    #     num_blocks = num_blocks_list[i]
+    #     for j in range(num_blocks):
+    #         t = residual_stack(t, filters=num_filters)
+    #     num_filters *= 2
+    
+    t = residual_stack(t, filters=num_filters)
     
     t = AveragePooling2D(4)(t)
     #t = MaxPooling2D(pool_size=(3, 3))(t)
@@ -152,7 +150,7 @@ model = create_res_net()
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 print(model.summary())
-history = model.fit(X_train, y_train_hot, batch_size=64, epochs=10, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=128, epochs=50, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
