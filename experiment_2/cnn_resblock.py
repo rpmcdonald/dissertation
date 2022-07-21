@@ -4,7 +4,7 @@ from tensorflow import Tensor
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Add, ReLU, Input, AveragePooling2D
+from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Add, ReLU, Input, AveragePooling2D, LeakyReLU
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -52,9 +52,9 @@ def resblock(x, kernelsize, filters):
     return out
 
 def relu_bn(inputs: Tensor) -> Tensor:
-    relu = ReLU()(inputs)
-    bn = BatchNormalization()(relu)
-    return bn
+    bn = BatchNormalization()(inputs)
+    relu = ReLU()(bn)
+    return relu
 
 def residual_block(x: Tensor, downsample: bool, filters: int, kernel_size: int = (3, 3)) -> Tensor:
     y = Conv2D(kernel_size=kernel_size,
@@ -76,12 +76,42 @@ def residual_block(x: Tensor, downsample: bool, filters: int, kernel_size: int =
     out = relu_bn(out)
     return out
 
+def residual_stack(input, filters):
+    """Convolutional residual stack with weight normalization.
+
+    Args:
+        filter: int, determines filter size for the residual stack.
+
+    Returns:
+        Residual stack output.
+    """
+    input_c = Conv2D(filters, 1, dilation_rate=1, padding="same")(input)
+
+    c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
+    lrelu1 = LeakyReLU()(c1)
+    c2 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu1)
+    add1 = Add()([c2, input_c])
+
+    lrelu2 = LeakyReLU()(add1)
+    c3 = Conv2D(filters, 3, dilation_rate=3, padding="same")(lrelu2)
+    lrelu3 = LeakyReLU()(c3)
+    c4 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu3)
+    add2 = Add()([add1, c4])
+
+    lrelu4 = LeakyReLU()(add2)
+    c5 = Conv2D(filters, 3, dilation_rate=9, padding="same")(lrelu4)
+    lrelu5 = LeakyReLU()(c5)
+    c6 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu5)
+    add3 = Add()([c6, add2])
+
+    return add3
+
 def create_res_net():
     
     inputs = Input(shape=(mfcc_shape, length, 1))
     num_filters = 8
     
-    t = BatchNormalization()(inputs)
+    #t = BatchNormalization()(inputs)
     t = Conv2D(kernel_size=(3, 3),
                strides=1,
                filters=num_filters,
@@ -89,11 +119,12 @@ def create_res_net():
     t = relu_bn(t)
     
     #num_blocks_list = [2, 5, 5, 2]
-    num_blocks_list = [2, 4, 2]
+    #num_blocks_list = [2, 4, 2]
+    num_blocks_list = [1]
     for i in range(len(num_blocks_list)):
         num_blocks = num_blocks_list[i]
         for j in range(num_blocks):
-            t = residual_block(t, downsample=(j==0 and i!=0), filters=num_filters)
+            t = residual_stack(t, filters=num_filters)
         num_filters *= 2
     
     t = AveragePooling2D(4)(t)

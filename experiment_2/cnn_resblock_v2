@@ -128,9 +128,147 @@ def create_discriminator(input_shape):
     return keras.Model(inp, [out_map1, out_map2, out_map3])
 
 
-generator = create_generator((None, 1))
-discriminator = create_discriminator((None, 1))
+# Generator loss
 
+
+def generator_loss(real_pred, fake_pred):
+    """Loss function for the generator.
+
+    Args:
+        real_pred: Tensor, output of the ground truth wave passed through the discriminator.
+        fake_pred: Tensor, output of the generator prediction passed through the discriminator.
+
+    Returns:
+        Loss for the generator.
+    """
+    gen_loss = []
+    for i in range(len(fake_pred)):
+        gen_loss.append(mse(tf.ones_like(fake_pred[i][-1]), fake_pred[i][-1]))
+
+    return tf.reduce_mean(gen_loss)
+
+
+def feature_matching_loss(real_pred, fake_pred):
+    """Implements the feature matching loss.
+
+    Args:
+        real_pred: Tensor, output of the ground truth wave passed through the discriminator.
+        fake_pred: Tensor, output of the generator prediction passed through the discriminator.
+
+    Returns:
+        Feature Matching Loss.
+    """
+    fm_loss = []
+    for i in range(len(fake_pred)):
+        for j in range(len(fake_pred[i]) - 1):
+            fm_loss.append(mae(real_pred[i][j], fake_pred[i][j]))
+
+    return tf.reduce_mean(fm_loss)
+
+
+def discriminator_loss(real_pred, fake_pred):
+    """Implements the discriminator loss.
+
+    Args:
+        real_pred: Tensor, output of the ground truth wave passed through the discriminator.
+        fake_pred: Tensor, output of the generator prediction passed through the discriminator.
+
+    Returns:
+        Discriminator Loss.
+    """
+    real_loss, fake_loss = [], []
+    for i in range(len(real_pred)):
+        real_loss.append(mse(tf.ones_like(real_pred[i][-1]), real_pred[i][-1]))
+        fake_loss.append(mse(tf.zeros_like(fake_pred[i][-1]), fake_pred[i][-1]))
+
+    # Calculating the final discriminator loss after scaling
+    disc_loss = tf.reduce_mean(real_loss) + tf.reduce_mean(fake_loss)
+    return disc_loss
+
+
+class MelGAN(keras.Model):
+    def __init__(self, generator, discriminator, **kwargs):
+        """MelGAN trainer class
+
+        Args:
+            generator: keras.Model, Generator model
+            discriminator: keras.Model, Discriminator model
+        """
+        super().__init__(**kwargs)
+        self.generator = generator
+        self.discriminator = discriminator
+
+    def compile(
+        self,
+        gen_optimizer,
+        disc_optimizer,
+        generator_loss,
+        feature_matching_loss,
+        discriminator_loss,
+    ):
+        """MelGAN compile method.
+
+        Args:
+            gen_optimizer: keras.optimizer, optimizer to be used for training
+            disc_optimizer: keras.optimizer, optimizer to be used for training
+            generator_loss: callable, loss function for generator
+            feature_matching_loss: callable, loss function for feature matching
+            discriminator_loss: callable, loss function for discriminator
+        """
+        super().compile()
+
+        # Optimizers
+        self.gen_optimizer = gen_optimizer
+        self.disc_optimizer = disc_optimizer
+
+        # Losses
+        self.generator_loss = generator_loss
+        self.feature_matching_loss = feature_matching_loss
+        self.discriminator_loss = discriminator_loss
+
+        # Trackers
+        self.gen_loss_tracker = keras.metrics.Mean(name="gen_loss")
+        self.disc_loss_tracker = keras.metrics.Mean(name="disc_loss")
+
+    def train_step(self, batch):
+        x_batch_train, y_batch_train = batch
+
+        with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+            # Generating the audio wave
+            gen_audio_wave = generator(x_batch_train, training=True)
+
+            # Generating the features using the discriminator
+            fake_pred = discriminator(y_batch_train)
+            real_pred = discriminator(gen_audio_wave)
+
+            # Calculating the generator losses
+            gen_loss = generator_loss(real_pred, fake_pred)
+            fm_loss = feature_matching_loss(real_pred, fake_pred)
+
+            # Calculating final generator loss
+            gen_fm_loss = gen_loss + 10 * fm_loss
+
+            # Calculating the discriminator losses
+            disc_loss = discriminator_loss(real_pred, fake_pred)
+
+        # Calculating and applying the gradients for generator and discriminator
+        grads_gen = gen_tape.gradient(gen_fm_loss, generator.trainable_weights)
+        grads_disc = disc_tape.gradient(disc_loss, discriminator.trainable_weights)
+        gen_optimizer.apply_gradients(zip(grads_gen, generator.trainable_weights))
+        disc_optimizer.apply_gradients(zip(grads_disc, discriminator.trainable_weights))
+
+        self.gen_loss_tracker.update_state(gen_fm_loss)
+        self.disc_loss_tracker.update_state(disc_loss)
+
+        return {
+            "gen_loss": self.gen_loss_tracker.result(),
+            "disc_loss": self.disc_loss_tracker.result(),
+        }
+
+
+
+mse = keras.losses.MeanSquaredError()
+mae = keras.losses.MeanAbsoluteError()
 
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
