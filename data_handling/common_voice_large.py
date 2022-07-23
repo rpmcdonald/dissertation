@@ -187,13 +187,13 @@ class Mfcc():
 
     def split_data(self):
         if self.randomise:
-            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=self.test_size)
-            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.5)
+            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, stratify=self.y, shuffle = True, test_size=0.3)
+            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, stratify=y_test, shuffle = True, test_size=0.66)
         else:
             #print(len(self.X))
-            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=self.test_size)
+            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, shuffle = False, test_size=0.3)
             #print(len(X_train), len(X_test))
-            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=0.5)
+            X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, shuffle = False, test_size=0.66)
             #print(len(X_test), len(X_val))
         
         if not self.gkf:
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     get_key_frames = False
     remove_silence = False
     remove_silence_percent = 0.15
-    cmvn = False
+    cmvn = True
 
     split_files = False
     split_size=64
@@ -253,8 +253,8 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=30000, 
-                    test_size=3000, 
+                    limit=10000, 
+                    test_size=9000, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
@@ -339,13 +339,13 @@ if __name__ == '__main__':
     
     # ---Standardise
     # Whiten over each file seperately
-    X_train_std=whiten(X_train.transpose()).transpose()
-    X_test_std=whiten(X_test.transpose()).transpose()
-    X_val_std=whiten(X_val.transpose()).transpose()
+    # X_train_std=whiten(X_train.transpose()).transpose()
+    # X_test_std=whiten(X_test.transpose()).transpose()
+    # X_val_std=whiten(X_val.transpose()).transpose()
 
-    np.save(f'mfccs/X_train_moz.npy', X_train_std)
-    np.save(f'mfccs/X_test_moz.npy', X_test_std)
-    np.save(f'mfccs/X_val_moz.npy', X_val_std)
-    np.save(f'mfccs/y_train_moz.npy', y_train)
-    np.save(f'mfccs/y_test_moz.npy', y_test)
-    np.save(f'mfccs/y_val_moz.npy', y_val)
+    np.save(f'mfccs/X_train_moz_small.npy', X_train)
+    np.save(f'mfccs/X_test_moz_small.npy', X_test)
+    np.save(f'mfccs/X_val_moz_small.npy', X_val)
+    np.save(f'mfccs/y_train_moz_small.npy', y_train)
+    np.save(f'mfccs/y_test_moz_small.npy', y_test)
+    np.save(f'mfccs/y_val_moz_small.npy', y_val)

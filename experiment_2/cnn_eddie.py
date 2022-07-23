@@ -22,6 +22,7 @@ if gpus:
     print(e)
 
 data = "moz"
+#data = "moz_small"
 mfcc_shape = 39
 length = 192
 classes = 2
@@ -58,7 +59,7 @@ model.add(Conv2D(32, (3, 3)))
 model.add(BatchNormalization())
 model.add(LeakyReLU())
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+#model.add(Dropout(0.25))
 
 model.add(Flatten())
 model.add(Dense(32))

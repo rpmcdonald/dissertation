@@ -23,6 +23,7 @@ if gpus:
     print(e)
 
 data = "moz"
+data = "moz_small"
 mfcc_shape = 39
 length = 192
 classes = 2
@@ -125,8 +126,8 @@ def create_res_net():
     
     t = residual_stack(t, filters=num_filters)
     
-    t = AveragePooling2D(4)(t)
-    #t = MaxPooling2D(pool_size=(3, 3))(t)
+    #t = AveragePooling2D(4)(t)
+    t = MaxPooling2D(pool_size=(3, 3))(t)
     t = Flatten()(t)
     outputs = Dense(classes, activation='softmax')(t)
     
@@ -138,9 +139,15 @@ def create_res_net():
     #     metrics=['accuracy']
     # )
 
+    # model.compile(
+    #     loss=keras.losses.categorical_crossentropy,
+    #     optimizer=keras.optimizers.Adagrad(lr=0.01),
+    #     metrics=['accuracy']
+    # )
+
     model.compile(
         loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.Adagrad(lr=0.01),
+        optimizer='adam',
         metrics=['accuracy']
     )
 
@@ -150,7 +157,7 @@ model = create_res_net()
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 print(model.summary())
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=50, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=128, epochs=200, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
