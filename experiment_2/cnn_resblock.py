@@ -57,26 +57,6 @@ def relu_bn(inputs: Tensor) -> Tensor:
     relu = ReLU()(bn)
     return relu
 
-def residual_block(x: Tensor, downsample: bool, filters: int, kernel_size: int = (3, 3)) -> Tensor:
-    y = Conv2D(kernel_size=kernel_size,
-               strides= (1 if not downsample else 2),
-               filters=filters,
-               padding="same")(x)
-    y = relu_bn(y)
-    y = Conv2D(kernel_size=kernel_size,
-               strides=1,
-               filters=filters,
-               padding="same")(y)
-
-    if downsample:
-        x = Conv2D(kernel_size=1,
-                   strides=2,
-                   filters=filters,
-                   padding="same")(x)
-    out = Add()([x, y])
-    out = relu_bn(out)
-    return out
-
 def residual_stack(input, filters):
     """Convolutional residual stack with weight normalization.
 
@@ -91,29 +71,33 @@ def residual_stack(input, filters):
     c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
     lrelu1 = LeakyReLU()(c1)
     add1 = Add()([lrelu1, input_c])
+    #add1 = Dropout(0.5)(add1)
 
     lrelu2 = LeakyReLU()(add1)
-    c3 = Conv2D(filters, 3, dilation_rate=3, padding="same")(lrelu2)
+    c3 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu2)
     lrelu3 = LeakyReLU()(c3)
     add2 = Add()([add1, lrelu3])
+    #add2 = Dropout(0.5)(add2)
 
     lrelu4 = LeakyReLU()(add2)
-    c5 = Conv2D(filters, 3, dilation_rate=9, padding="same")(lrelu4)
+    c5 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu4)
     lrelu5 = LeakyReLU()(c5)
     add3 = Add()([lrelu5, add2])
+    #add3 = Dropout(0.4)(add3)
 
     return add3
 
 def create_res_net():
     
     inputs = Input(shape=(mfcc_shape, length, 1))
-    num_filters = 16
+    num_filters = 32
     
     t = Conv2D(kernel_size=(3, 3),
                strides=1,
                filters=num_filters,
                padding="same")(inputs)
     t = relu_bn(t)
+    t = Dropout(0.8)(t)
     
     #num_blocks_list = [2, 5, 5, 2]
     #num_blocks_list = [2, 4, 2]
@@ -128,6 +112,7 @@ def create_res_net():
     
     #t = AveragePooling2D(4)(t)
     t = MaxPooling2D(pool_size=(3, 3))(t)
+    t = Dropout(0.5)(t)
     t = Flatten()(t)
     outputs = Dense(classes, activation='softmax')(t)
     
