@@ -57,6 +57,11 @@ def relu_bn(inputs: Tensor) -> Tensor:
     relu = ReLU()(bn)
     return relu
 
+def leaky_relu_bn(inputs: Tensor) -> Tensor:
+    bn = BatchNormalization()(inputs)
+    relu = LeakyReLU()(bn)
+    return relu
+
 def residual_stack(input, filters):
     """Convolutional residual stack with weight normalization.
 
@@ -69,19 +74,19 @@ def residual_stack(input, filters):
     input_c = Conv2D(filters, 1, dilation_rate=1, padding="same")(input)
 
     c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
-    lrelu1 = LeakyReLU()(c1)
+    lrelu1 = leaky_relu_bn(c1)
     add1 = Add()([lrelu1, input_c])
     #add1 = Dropout(0.5)(add1)
 
-    lrelu2 = LeakyReLU()(add1)
+    lrelu2 = leaky_relu_bn(add1)
     c3 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu2)
-    lrelu3 = LeakyReLU()(c3)
+    lrelu3 = leaky_relu_bn(c3)
     add2 = Add()([add1, lrelu3])
     #add2 = Dropout(0.5)(add2)
 
-    lrelu4 = LeakyReLU()(add2)
+    lrelu4 = leaky_relu_bn(add2)
     c5 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu4)
-    lrelu5 = LeakyReLU()(c5)
+    lrelu5 = leaky_relu_bn(c5)
     add3 = Add()([lrelu5, add2])
     #add3 = Dropout(0.4)(add3)
 
