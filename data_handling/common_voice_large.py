@@ -254,7 +254,7 @@ if __name__ == '__main__':
         mfcc = Mfcc(df=df, 
                     accent=accent, 
                     limit=10000, 
-                    test_size=9000, 
+                    test_size=1, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
                     randomise=randomise, 
@@ -339,9 +339,9 @@ if __name__ == '__main__':
     
     # ---Standardise
     # Whiten over each file seperately
-    # X_train_std=whiten(X_train.transpose()).transpose()
-    # X_test_std=whiten(X_test.transpose()).transpose()
-    # X_val_std=whiten(X_val.transpose()).transpose()
+    X_train_std=whiten(X_train.transpose()).transpose()
+    X_test_std=whiten(X_test.transpose()).transpose()
+    X_val_std=whiten(X_val.transpose()).transpose()
 
     np.save(f'mfccs/X_train_moz_small.npy', X_train)
     np.save(f'mfccs/X_test_moz_small.npy', X_test)

@@ -22,7 +22,7 @@ if gpus:
     print(e)
 
 data = "moz"
-#data = "moz_small"
+data = "moz_small"
 mfcc_shape = 39
 length = 192
 classes = 2
@@ -46,23 +46,27 @@ model = Sequential()
 model.add(Conv2D(16, (3, 3), input_shape=(mfcc_shape, length, 1)))
 model.add(BatchNormalization())
 model.add(LeakyReLU())
-model.add(Conv2D(16, (3, 3)))
+model.add(Conv2D(16, (3, 3), strides=2))
 model.add(BatchNormalization())
 model.add(LeakyReLU())
-model.add(MaxPooling2D(pool_size=(3, 3)))
+#model.add(MaxPooling2D(pool_size=(3, 3)))
 #model.add(Dropout(0.5))
 
 model.add(Conv2D(16, (3, 3)))
 model.add(BatchNormalization())
 model.add(LeakyReLU())
-model.add(Conv2D(32, (3, 3)))
+model.add(Conv2D(32, (3, 3), strides=2))
 model.add(BatchNormalization())
 model.add(LeakyReLU())
-model.add(MaxPooling2D(pool_size=(2, 2)))
+#model.add(MaxPooling2D(pool_size=(2, 2)))
 #model.add(Dropout(0.25))
+# GLOBAL MAX POOLING
 
 model.add(Flatten())
-model.add(Dense(32))
+model.add(Dense(256))
+model.add(LeakyReLU())
+model.add(Dense(128))
+model.add(LeakyReLU())
 model.add(Dropout(0.5))
 model.add(Dense(classes))
 model.add(Activation('softmax'))
@@ -70,6 +74,8 @@ model.add(Activation('softmax'))
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adagrad(lr=0.01),
               metrics=['accuracy'])
+
+print(model.summary())
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 

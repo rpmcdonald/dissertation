@@ -5,7 +5,7 @@ from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Add, ReLU, Input, AveragePooling2D, LeakyReLU
-
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -22,7 +22,7 @@ if gpus:
     # Virtual devices must be set before GPUs have been initialized
     print(e)
 
-data = "moz"
+#data = "moz"
 data = "moz_small"
 mfcc_shape = 39
 length = 192
@@ -42,15 +42,6 @@ y_test_hot = to_categorical(y_test, num_classes=classes)
 y_val_hot = to_categorical(y_val, num_classes=classes)
 
 callbacks = [TensorBoard(log_dir='./logs')]
-
-def resblock(x, kernelsize, filters):
-    fx = Conv2D(filters, kernelsize, activation='relu', padding='same')(x)
-    fx = BatchNormalization()(fx)
-    fx = Conv2D(filters, kernelsize, padding='same')(fx)
-    out = Add()([x,fx])
-    out = ReLU()(out)
-    out = BatchNormalization()(out)
-    return out
 
 def relu_bn(inputs: Tensor) -> Tensor:
     bn = BatchNormalization()(inputs)
@@ -76,19 +67,16 @@ def residual_stack(input, filters):
     c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
     lrelu1 = leaky_relu_bn(c1)
     add1 = Add()([lrelu1, input_c])
-    #add1 = Dropout(0.5)(add1)
 
     lrelu2 = leaky_relu_bn(add1)
-    c3 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu2)
+    c3 = Conv2D(filters, 3, dilation_rate=3, padding="same")(lrelu2)
     lrelu3 = leaky_relu_bn(c3)
     add2 = Add()([add1, lrelu3])
-    #add2 = Dropout(0.5)(add2)
 
     lrelu4 = leaky_relu_bn(add2)
-    c5 = Conv2D(filters, 3, dilation_rate=1, padding="same")(lrelu4)
+    c5 = Conv2D(filters, 3, dilation_rate=9, padding="same")(lrelu4)
     lrelu5 = leaky_relu_bn(c5)
     add3 = Add()([lrelu5, add2])
-    #add3 = Dropout(0.4)(add3)
 
     return add3
 
@@ -101,19 +89,11 @@ def create_res_net():
                strides=1,
                filters=num_filters,
                padding="same")(inputs)
-    t = relu_bn(t)
+    t = leaky_relu_bn(t)
     t = Dropout(0.8)(t)
     
-    #num_blocks_list = [2, 5, 5, 2]
-    #num_blocks_list = [2, 4, 2]
-    # num_blocks_list = [1]
-    # for i in range(len(num_blocks_list)):
-    #     num_blocks = num_blocks_list[i]
-    #     for j in range(num_blocks):
-    #         t = residual_stack(t, filters=num_filters)
-    #     num_filters *= 2
-    
     t = residual_stack(t, filters=num_filters)
+    #t = residual_stack(t, filters=num_filters)
     
     #t = AveragePooling2D(4)(t)
     t = MaxPooling2D(pool_size=(3, 3))(t)
@@ -146,8 +126,7 @@ def create_res_net():
 model = create_res_net()
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
-print(model.summary())
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=200, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=64, epochs=200, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
@@ -185,3 +164,13 @@ plt.show()
 #
 # model.save('final_tert_model.h5')
 print(model.summary())
+
+# Test
+results = model.evaluate(X_test, y_test_hot, batch_size=128)
+print("test loss, test acc:", results)
+
+y_predict = model.predict(X_test)
+y_classes = y_predict.argmax(axis=-1)
+y_test = np.ravel(y_test)
+cm = confusion_matrix(y_test, y_classes)
+print(f'Confusion Matrix: \n{cm}')
