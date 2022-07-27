@@ -3,8 +3,8 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Add, ReLU, LeakyReLU
-
+from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Add, ReLU, LeakyReLU, GlobalMaxPool2D
+from sklearn.metrics import confusion_matrix
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -61,6 +61,7 @@ model.add(LeakyReLU())
 #model.add(MaxPooling2D(pool_size=(2, 2)))
 #model.add(Dropout(0.25))
 # GLOBAL MAX POOLING
+model.add(GlobalMaxPool2D())
 
 model.add(Flatten())
 model.add(Dense(256))
@@ -75,11 +76,9 @@ model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adagrad(lr=0.01),
               metrics=['accuracy'])
 
-print(model.summary())
-
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=100, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=128, epochs=200, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
@@ -110,10 +109,20 @@ plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 
 plt.tight_layout()
-plt.savefig("CNN.png")
+plt.savefig("cnn.png")
 plt.show()
 
 # what really optimized my model: smaller learning rate, larger number of epochs,
 #
 # model.save('final_tert_model.h5')
 print(model.summary())
+
+# Test
+results = model.evaluate(X_test, y_test_hot, batch_size=128)
+print("test loss, test acc:", results)
+
+y_predict = model.predict(X_test)
+y_classes = y_predict.argmax(axis=-1)
+y_test = np.ravel(y_test)
+cm = confusion_matrix(y_test, y_classes)
+print(f'Confusion Matrix: \n{cm}')
