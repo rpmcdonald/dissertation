@@ -50,7 +50,7 @@ model.add(Conv2D(16, (3, 3), strides=2))
 model.add(BatchNormalization())
 model.add(LeakyReLU())
 #model.add(MaxPooling2D(pool_size=(3, 3)))
-#model.add(Dropout(0.5))
+model.add(Dropout(0.5))
 
 model.add(Conv2D(16, (3, 3)))
 model.add(BatchNormalization())
@@ -59,7 +59,7 @@ model.add(Conv2D(32, (3, 3), strides=2))
 model.add(BatchNormalization())
 model.add(LeakyReLU())
 #model.add(MaxPooling2D(pool_size=(2, 2)))
-#model.add(Dropout(0.25))
+model.add(Dropout(0.25))
 # GLOBAL MAX POOLING
 model.add(GlobalMaxPool2D())
 
@@ -73,12 +73,16 @@ model.add(Dense(classes))
 model.add(Activation('softmax'))
 
 model.compile(loss=keras.losses.categorical_crossentropy,
-              optimizer=keras.optimizers.Adagrad(lr=0.01),
+              optimizer=keras.optimizers.Adam(lr=0.001),
               metrics=['accuracy'])
+
+# model.compile(loss=keras.losses.categorical_crossentropy,
+#               optimizer=keras.optimizers.Adagrad(lr=0.01),
+#               metrics=['accuracy'])
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=200, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=128, epochs=1000, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
