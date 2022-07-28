@@ -50,7 +50,6 @@ model.add(Conv2D(16, (3, 3), strides=2))
 model.add(BatchNormalization())
 model.add(LeakyReLU())
 model.add(Dropout(0.5))
-# ADD POOL?
 
 model.add(Conv2D(16, (3, 3)))
 model.add(BatchNormalization())
