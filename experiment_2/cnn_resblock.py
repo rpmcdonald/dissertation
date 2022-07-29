@@ -4,7 +4,7 @@ from tensorflow import Tensor
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Add, ReLU, Input, AveragePooling2D, LeakyReLU
+from tensorflow.keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Add, ReLU, Input, GlobalMaxPool2D, LeakyReLU
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ if gpus:
     # Virtual devices must be set before GPUs have been initialized
     print(e)
 
-#data = "moz"
+data = "moz"
 data = "moz_small"
 mfcc_shape = 39
 length = 192
@@ -90,15 +90,21 @@ def create_res_net():
                filters=num_filters,
                padding="same")(inputs)
     t = leaky_relu_bn(t)
-    t = Dropout(0.8)(t)
+    t = Dropout(0.5)(t)
     
     t = residual_stack(t, filters=num_filters)
     #t = residual_stack(t, filters=num_filters)
     
     #t = AveragePooling2D(4)(t)
     t = MaxPooling2D(pool_size=(3, 3))(t)
-    t = Dropout(0.5)(t)
+    t = GlobalMaxPool2D()(t)
+    #t = Dropout(0.5)(t)
     t = Flatten()(t)
+    t = Dense(256)(t)
+    t = LeakyReLU()(t)
+    t = Dense(128)(t)
+    t = LeakyReLU()(t)
+    t = Dropout(0.5)(t)
     outputs = Dense(classes, activation='softmax')(t)
     
     model = Model(inputs, outputs)

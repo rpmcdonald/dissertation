@@ -22,7 +22,7 @@ if gpus:
     print(e)
 
 data = "moz"
-data = "moz_small"
+#data = "moz_small"
 mfcc_shape = 39
 length = 192
 classes = 2

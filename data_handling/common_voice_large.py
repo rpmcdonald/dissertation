@@ -253,7 +253,7 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=10000, 
+                    limit=30000, 
                     test_size=1, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
@@ -343,9 +343,9 @@ if __name__ == '__main__':
     X_test_std=whiten(X_test.transpose()).transpose()
     X_val_std=whiten(X_val.transpose()).transpose()
 
-    np.save(f'mfccs/X_train_moz_small.npy', X_train)
-    np.save(f'mfccs/X_test_moz_small.npy', X_test)
-    np.save(f'mfccs/X_val_moz_small.npy', X_val)
-    np.save(f'mfccs/y_train_moz_small.npy', y_train)
-    np.save(f'mfccs/y_test_moz_small.npy', y_test)
-    np.save(f'mfccs/y_val_moz_small.npy', y_val)
+    np.save(f'mfccs/X_train_moz.npy', X_train)
+    np.save(f'mfccs/X_test_moz.npy', X_test)
+    np.save(f'mfccs/X_val_moz.npy', X_val)
+    np.save(f'mfccs/y_train_moz.npy', y_train)
+    np.save(f'mfccs/y_test_moz.npy', y_test)
+    np.save(f'mfccs/y_val_moz.npy', y_val)
