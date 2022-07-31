@@ -90,7 +90,7 @@ def create_res_net():
                filters=num_filters,
                padding="same")(inputs)
     t = leaky_relu_bn(t)
-    t = Dropout(0.5)(t)
+    t = Dropout(0.8)(t)
     
     t = residual_stack(t, filters=num_filters)
     #t = residual_stack(t, filters=num_filters)
@@ -104,6 +104,10 @@ def create_res_net():
     t = LeakyReLU()(t)
     t = Dense(128)(t)
     t = LeakyReLU()(t)
+    # t = Dense(64)(t)
+    # t = LeakyReLU()(t)
+    # t = Dense(16)(t)
+    # t = LeakyReLU()(t)
     t = Dropout(0.5)(t)
     outputs = Dense(classes, activation='softmax')(t)
     
@@ -132,7 +136,7 @@ def create_res_net():
 model = create_res_net()
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=50, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=128, epochs=100, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
@@ -175,8 +179,8 @@ print(model.summary())
 results = model.evaluate(X_test, y_test_hot, batch_size=128)
 print("test loss, test acc:", results)
 
-y_predict = model.predict(X_test)
-y_classes = y_predict.argmax(axis=-1)
-y_test = np.ravel(y_test)
-cm = confusion_matrix(y_test, y_classes)
-print(f'Confusion Matrix: \n{cm}')
+# y_predict = model.predict(X_test)
+# y_classes = y_predict.argmax(axis=-1)
+# y_test = np.ravel(y_test)
+# cm = confusion_matrix(y_test, y_classes)
+# print(f'Confusion Matrix: \n{cm}')
