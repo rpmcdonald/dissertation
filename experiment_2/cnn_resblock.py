@@ -9,18 +9,25 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
 import matplotlib.pyplot as plt
 
-# gpus = tf.config.experimental.list_physical_devices('GPU')
-# if gpus:
-#   # Restrict TensorFlow to only allocate 2GB of memory on the first GPU
-#   try:
-#     tf.config.experimental.set_virtual_device_configuration(
-#         gpus[0],
-#         [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2048)])
-#     logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-#     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-#   except RuntimeError as e:
-#     # Virtual devices must be set before GPUs have been initialized
-#     print(e)
+# from tensorflow.compat.v1 import ConfigProto
+# from tensorflow.compat.v1 import InteractiveSession
+
+# config = ConfigProto()
+# config.gpu_options.allow_growth = True
+# session = InteractiveSession(config=config)
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 2GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2048)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
 
 data = "moz"
 data = "moz_small"
@@ -41,7 +48,8 @@ y_train_hot = to_categorical(y_train, num_classes=classes)
 y_test_hot = to_categorical(y_test, num_classes=classes)
 y_val_hot = to_categorical(y_val, num_classes=classes)
 
-callbacks = [TensorBoard(log_dir='./logs')]
+#callbacks = [TensorBoard(log_dir='./logs')]
+callbacks = [TensorBoard(log_dir='../../../../../../eddie/scratch/s1126843/logs')]
 
 def relu_bn(inputs: Tensor) -> Tensor:
     bn = BatchNormalization()(inputs)
@@ -90,13 +98,13 @@ def create_res_net():
                filters=num_filters,
                padding="same")(inputs)
     t = leaky_relu_bn(t)
-    t = Dropout(0.8)(t)
+    t = Dropout(0.5)(t)
     
     t = residual_stack(t, filters=num_filters)
-    #t = residual_stack(t, filters=num_filters)
+    # t = Dropout(0.5)(t)
+    # t = residual_stack(t, filters=num_filters)
     
-    #t = AveragePooling2D(4)(t)
-    #t = MaxPooling2D(pool_size=(3, 3))(t)
+
     t = GlobalMaxPool2D()(t)
     #t = Dropout(0.5)(t)
     t = Flatten()(t)
@@ -104,10 +112,10 @@ def create_res_net():
     t = LeakyReLU()(t)
     t = Dense(128)(t)
     t = LeakyReLU()(t)
-    # t = Dense(64)(t)
-    # t = LeakyReLU()(t)
-    # t = Dense(16)(t)
-    # t = LeakyReLU()(t)
+    t = Dense(64)(t)
+    t = LeakyReLU()(t)
+    t = Dense(16)(t)
+    t = LeakyReLU()(t)
     t = Dropout(0.5)(t)
     outputs = Dense(classes, activation='softmax')(t)
     
@@ -136,7 +144,7 @@ def create_res_net():
 model = create_res_net()
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
-history = model.fit(X_train, y_train_hot, batch_size=128, epochs=100, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=64, epochs=50, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
