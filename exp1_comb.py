@@ -5,9 +5,10 @@ from sklearn.model_selection import GridSearchCV
 import numpy as np
 
 data = "moz"
+data = "moz_small"
 mfcc_shape = 39
-length = 128
-n_components = 8
+length = 192
+n_components = 4
 pca = True
 
 if pca:
@@ -35,48 +36,64 @@ y_test = np.ravel(y_test)
 
 # KNN
 
-parameters = {
-    'n_neighbors': list(range(1, 15)),
-    'weights': ['uniform', 'distance'],
-    'metric': ['euclidean', 'manhattan', 'minkowski'],
+# parameters = {
+#     'n_neighbors': list(range(1, 15)),
+#     'weights': ['uniform', 'distance'],
+#     'metric': ['euclidean', 'manhattan', 'minkowski'],
+# }
+
+parameters_euc = {
+    'n_neighbors': [11],
+    'weights': ['distance'],
+    'metric': ['euclidean'],
 }
 
-model = GridSearchCV(KNeighborsClassifier(), parameters, cv=5, n_jobs=-1, verbose=1)
+parameters_man = {
+    'n_neighbors': [11],
+    'weights': ['distance'],
+    'metric': ['manhattan'],
+}
+
+model = KNeighborsClassifier(n_neighbors=11, weights="uniform", metric="euclidean")
 model.fit(X_train_reshape,y_train)
-y_predict = model.predict(X_test_reshape)
-print(f'KNN Model Score: {model.score(X_test_reshape, y_test)}')
+print(f'KNN Euclidean Model Score: {model.score(X_test_reshape, y_test)}')
+
+model = KNeighborsClassifier(n_neighbors=11, weights="uniform", metric="manhattan")
+model.fit(X_train_reshape,y_train)
+print(f'KNN Manhattan Model Score: {model.score(X_test_reshape, y_test)}')
 
 # SVM
-parameters = [{'C' : [0.1,1,10,100,1000], 'kernel' : ['rbf'], 'gamma' : [0.5,0.1,0.01,0.001]}]
-classifier = SVC(kernel = 'rbf', random_state=0,  C=1)
+parameters = {
+    'C' : [1], 
+    'kernel' : ['rbf'], 
+    'gamma' : ["scale"]}
 
-model = GridSearchCV(estimator=classifier,
-    param_grid=parameters,
-    scoring='accuracy',
-    cv=5,
-    n_jobs=-1, 
-    verbose=1)
+# parameters = {
+#     'C' : [0.1,1,10,100,1000], 
+#     'kernel' : ['rbf'], 
+#     'gamma' : ["scale"]}
 
-grid_search = model.fit(X_train_reshape,y_train)
-y_predict = model.predict(X_test_reshape)
+model = SVC(kernel = 'rbf', gamma="scale",  C=1)
+model.fit(X_train_reshape,y_train)
 print(f'SVM Model Score: {model.score(X_test_reshape, y_test)}')
 
 # RFC
-parameters = { 
-    'n_estimators': [100, 200, 500],
-    'max_features': ['sqrt', 'log2'],
-    #'max_depth' : [4,5,6,7,8],
-    'criterion' :['gini', 'entropy']
+parameters_gini = { 
+    'n_estimators': [300],
+    'max_features': ['sqrt'],
+    'criterion' :['gini']
 }
-classifier = RandomForestClassifier()
 
-model = GridSearchCV(estimator=classifier,
-	param_grid=parameters,
-	scoring='accuracy',
-	cv=5,
-	n_jobs=-1, 
-    verbose=1)
+parameters_ent = { 
+    'n_estimators': [300],
+    'max_features': ['sqrt'],
+    'criterion' :['entropy']
+}
 
+model = RandomForestClassifier(n_estimators=300, max_features="sqrt", criterion='gini')
 model.fit(X_train_reshape, y_train)
-y_predict = model.predict(X_test_reshape)
-print(f'RFC Model Score: {model.score(X_test_reshape, y_test)}')
+print(f'RFC Gini Model Score: {model.score(X_test_reshape, y_test)}')
+
+model = RandomForestClassifier(n_estimators=300, max_features="sqrt", criterion='entropy')
+model.fit(X_train_reshape, y_train)
+print(f'RFC Entropy Model Score: {model.score(X_test_reshape, y_test)}')

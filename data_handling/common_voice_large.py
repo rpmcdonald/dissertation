@@ -240,9 +240,16 @@ if __name__ == '__main__':
     randomise = False
     get_key_frames = False
     remove_silence = False
-    remove_silence_percent = 0.15
+    remove_silence_percent = 0.35
     cmvn = True
+    whiten_ = True
 
+    run_pca = True
+    pca_comps = 4
+    pca_visualise = False
+    run_lda = False
+    k_means = False
+    k_means_clusters = 3
     split_files = False
     split_size=64
 
@@ -253,7 +260,7 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=30000, 
+                    limit=10000, 
                     test_size=1, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
@@ -338,14 +345,89 @@ if __name__ == '__main__':
         X_val = np.array(new_X_val).reshape(-1, mfcc_size, split_size)
     
     # ---Standardise
-    # Whiten over each file seperately
-    X_train_std=whiten(X_train.transpose()).transpose()
-    X_test_std=whiten(X_test.transpose()).transpose()
-    X_val_std=whiten(X_val.transpose()).transpose()
+    if whiten_:
+        # Whiten over each file seperately
+        X_train_std=whiten(X_train.transpose()).transpose()
+        X_test_std=whiten(X_test.transpose()).transpose()
+        X_val_std=whiten(X_val.transpose()).transpose()
+    else:
+        X_train_std=X_train
+        X_test_std=X_test
+        X_val_std=X_val
 
-    np.save(f'mfccs/X_train_moz.npy', X_train)
-    np.save(f'mfccs/X_test_moz.npy', X_test)
-    np.save(f'mfccs/X_val_moz.npy', X_val)
-    np.save(f'mfccs/y_train_moz.npy', y_train)
-    np.save(f'mfccs/y_test_moz.npy', y_test)
-    np.save(f'mfccs/y_val_moz.npy', y_val)
+    # ---PCA
+    if run_pca:
+        print("in PCA")
+        pca = PCA(n_components=pca_comps)
+        #pipe = Pipeline([('scaler', StandardScaler()), ('pca', pca)]) # Can add this instead of pca below, gives different results and don't know why
+
+        scaler = StandardScaler()
+
+        nsamples, nx, ny = X_train_std.shape
+        X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
+        X_train_reshape = scaler.fit_transform(X_train_reshape)
+        
+        nsamples, nx, ny = X_test_std.shape
+        X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
+        X_test_reshape = scaler.transform(X_test_reshape)
+
+        
+        x_train_pca = pca.fit_transform(X_train_reshape)
+        print(X_train_std.shape, X_train_reshape.shape, x_train_pca.shape)
+        X_train_std = x_train_pca
+
+
+        x_test_pca = pca.transform(X_test_reshape)
+        X_test_std = x_test_pca
+        
+        print("PCA variance ratio:", sum(pca.explained_variance_ratio_)) 
+
+        if pca_visualise:
+            fig = plt.figure()
+            ax = fig.add_subplot(projection='3d')
+            scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
+            legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
+            ax.add_artist(legend1)
+            plt.show()
+
+            # print(y_train.shape)
+            # graph_y_train = y_train.reshape(-1)
+            # print(graph_y_train)
+
+            def interactive_3d_plot(data, names):
+                scatt = py_go.Scatter3d(x=data[:, 0], y=data[:, 1], z=data[:, 2], mode="markers", text=names)
+                data = py_go.Data([scatt])
+                layout = py_go.Layout(title="Anomaly detection")
+                figure = py_go.Figure(data=data, layout=layout)
+                py_o.iplot(figure)
+
+            interactive_3d_plot(x_train_pca, names)
+
+    # --- LDA
+    if run_lda:
+        print("in LDA")
+        lda = LinearDiscriminantAnalysis()
+        nsamples, nx, ny = X_train_std.shape
+        X_train_reshape = X_train_std.reshape((nsamples,nx*ny))
+        lda.fit(X_train_reshape, y_train.reshape(-1))
+        # IS THIS RIGHT?
+        X_train_std = lda.transform(X_train_reshape)
+        #print(X_train_std.shape)
+
+        nsamples, nx, ny = X_test_std.shape
+        X_test_reshape = X_test_std.reshape((nsamples,nx*ny))
+        X_test_std = lda.transform(X_test_reshape)
+
+        # fig = plt.figure()
+        # ax = fig.add_subplot()
+        # scatter = ax.scatter(X_train_std[:,0], X_train_std[:,1], c=y_train)
+        # legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
+        # ax.add_artist(legend1)
+        # plt.show()
+
+    np.save(f'mfccs/X_train_moz_small.npy', X_train_std)
+    np.save(f'mfccs/X_test_moz_small.npy', X_test_std)
+    np.save(f'mfccs/X_val_moz_small.npy', X_val_std)
+    np.save(f'mfccs/y_train_moz_small.npy', y_train)
+    np.save(f'mfccs/y_test_moz_small.npy', y_test)
+    np.save(f'mfccs/y_val_moz_small.npy', y_val)

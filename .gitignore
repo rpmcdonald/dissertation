@@ -1,5 +1,6 @@
 #specific
 mfccs/
+mfcc_backup/
 spectrograms/
 logs/
 
