@@ -76,13 +76,11 @@ def residual_stack(input, filters):
     lrelu1 = leaky_relu_bn(c1)
     add1 = Add()([lrelu1, input_c])
 
-    lrelu2 = leaky_relu_bn(add1)
-    c3 = Conv2D(filters, 3, dilation_rate=3, padding="same")(lrelu2)
+    c3 = Conv2D(filters, 3, dilation_rate=3, padding="same")(add1)
     lrelu3 = leaky_relu_bn(c3)
     add2 = Add()([add1, lrelu3])
 
-    lrelu4 = leaky_relu_bn(add2)
-    c5 = Conv2D(filters, 3, dilation_rate=9, padding="same")(lrelu4)
+    c5 = Conv2D(filters, 3, dilation_rate=9, padding="same")(add2)
     lrelu5 = leaky_relu_bn(c5)
     add3 = Add()([lrelu5, add2])
 
@@ -98,14 +96,14 @@ def create_res_net():
                filters=num_filters,
                padding="same")(inputs)
     t = leaky_relu_bn(t)
-    t = Dropout(0.5)(t)
+    #t = Dropout(0.5)(t)
     
     t = residual_stack(t, filters=num_filters)
     # t = Dropout(0.5)(t)
     # t = residual_stack(t, filters=num_filters)
     
 
-    t = GlobalMaxPool2D()(t)
+    t = GlobalMaxPool2D()(t) # or avg
     #t = Dropout(0.5)(t)
     t = Flatten()(t)
     t = Dense(256)(t)

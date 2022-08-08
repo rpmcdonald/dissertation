@@ -5,10 +5,10 @@ from sklearn.model_selection import GridSearchCV
 import numpy as np
 
 data = "moz"
-data = "moz_small"
+#data = "moz_small"
 mfcc_shape = 39
 length = 192
-n_components = 4
+n_components = 192
 pca = True
 
 if pca:
