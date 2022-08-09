@@ -87,6 +87,19 @@ def residual_stack(input, filters):
 
     return add3
 
+def basic_residual_stack(input, filters):
+        # IS THIS PART RIGHT?
+    input_c = Conv2D(filters, 1, dilation_rate=1, padding="same")(input)
+
+    c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
+    lrelu1 = leaky_relu_bn(c1)
+    c2 = Conv2D(filters, 3, dilation_rate=3, padding="same")(lrelu1)
+    #lrelu1 = leaky_relu_bn(c1)
+    add1 = Add()([c2, input_c])
+    #return_relu = leaky_relu_bn(add1)
+
+    return add1
+
 def create_res_net():
     
     inputs = Input(shape=(mfcc_shape, length, 1))
@@ -99,8 +112,11 @@ def create_res_net():
     t = leaky_relu_bn(t)
     #t = Dropout(0.5)(t)
     
-    t = residual_stack(t, filters=num_filters)
-    t = residual_stack(t, filters=num_filters)
+    # t = residual_stack(t, filters=num_filters)
+    # t = residual_stack(t, filters=num_filters)
+    t = basic_residual_stack(t, filters=num_filters)
+    t = basic_residual_stack(t, filters=num_filters)
+    t = basic_residual_stack(t, filters=num_filters)
     # t = Dropout(0.5)(t)
     # t = residual_stack(t, filters=num_filters)
     
@@ -144,7 +160,7 @@ def create_res_net():
 model = create_res_net()
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
-history = model.fit(X_train, y_train_hot, batch_size=64, epochs=50, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=32, epochs=50, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 
