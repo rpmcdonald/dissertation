@@ -70,6 +70,7 @@ def residual_stack(input, filters):
     Returns:
         Residual stack output.
     """
+    # IS THIS PART RIGHT?
     input_c = Conv2D(filters, 1, dilation_rate=1, padding="same")(input)
 
     c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
@@ -78,7 +79,7 @@ def residual_stack(input, filters):
 
     c3 = Conv2D(filters, 3, dilation_rate=3, padding="same")(add1)
     lrelu3 = leaky_relu_bn(c3)
-    add2 = Add()([add1, lrelu3])
+    add2 = Add()([lrelu3, add1])
 
     c5 = Conv2D(filters, 3, dilation_rate=9, padding="same")(add2)
     lrelu5 = leaky_relu_bn(c5)
@@ -98,6 +99,7 @@ def create_res_net():
     t = leaky_relu_bn(t)
     #t = Dropout(0.5)(t)
     
+    t = residual_stack(t, filters=num_filters)
     t = residual_stack(t, filters=num_filters)
     # t = Dropout(0.5)(t)
     # t = residual_stack(t, filters=num_filters)
