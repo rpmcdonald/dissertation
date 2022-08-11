@@ -30,7 +30,7 @@ if gpus:
     print(e)
 
 data = "moz"
-data = "moz_small"
+#data = "moz_small"
 mfcc_shape = 39
 length = 192
 classes = 2
@@ -94,10 +94,9 @@ def basic_residual_stack(input, filters):
     c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
     lrelu1 = leaky_relu_bn(c1)
     c2 = Conv2D(filters, 3, dilation_rate=3, padding="same")(lrelu1)
-    lrelu2 = leaky_relu_bn(c2)
-    add1 = Add()([lrelu2, input_c])
-    #return_relu = leaky_relu_bn(add1)
-    return_relu = add1
+    #lrelu2 = leaky_relu_bn(c2)
+    add1 = Add()([c2, input_c])
+    return_relu = leaky_relu_bn(add1)
 
     return return_relu
 
@@ -108,7 +107,7 @@ def create_res_net():
     
     t = Conv2D(kernel_size=(3, 3),
                strides=1,
-               filters=num_filters,
+               filters=16,
                padding="same")(inputs)
     t = leaky_relu_bn(t)
     #t = MaxPooling2D(pool_size=(3, 3))(t)
@@ -116,9 +115,9 @@ def create_res_net():
     # POOL HERE?
     
     # t = residual_stack(t, filters=num_filters)
-    t = basic_residual_stack(t, filters=num_filters)
+    t = basic_residual_stack(t, filters=16)
     t = Dropout(0.2)(t)
-    t = basic_residual_stack(t, filters=num_filters)
+    t = basic_residual_stack(t, filters=16)
     t = Dropout(0.2)(t)
     t = basic_residual_stack(t, filters=num_filters)
     # t = Dropout(0.5)(t)
@@ -162,7 +161,7 @@ def create_res_net():
 model = create_res_net()
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
-history = model.fit(X_train, y_train_hot, batch_size=64, epochs=100, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=64, epochs=50, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 

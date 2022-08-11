@@ -22,12 +22,12 @@ import matplotlib.pyplot as plt
 #     print(e)
 
 data = "moz"
-data = "moz_small"
+#data = "moz_small"
 mfcc_shape = 39
 length = 192
 classes = 2
 
-X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
+X_train = np.load(f'mfcc/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 X_val = np.load(f'mfccs/X_val_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 y_train = np.load(f'mfccs/y_train_{data}.npy')
@@ -73,6 +73,8 @@ model.add(Dropout(0.5))
 model.add(Dense(classes))
 #model.add(Activation('softmax'))
 model.add(Activation('sigmoid'))
+
+print(model.summary())
 
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adam(lr=0.001),
