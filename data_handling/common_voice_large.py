@@ -239,12 +239,12 @@ if __name__ == '__main__':
     mfcc_size=39
     randomise = False
     get_key_frames = False
-    remove_silence = False
+    remove_silence = True
     remove_silence_percent = 0.35
     cmvn = True
     whiten_ = True
 
-    run_pca = True
+    run_pca = False
     pca_comps = 192 
     pca_visualise = False
     run_lda = False
