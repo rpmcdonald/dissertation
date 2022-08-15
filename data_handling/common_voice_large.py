@@ -244,9 +244,9 @@ if __name__ == '__main__':
     cmvn = True
     whiten_ = True
 
-    run_pca = False
-    pca_comps = 192 
-    pca_visualise = False
+    run_pca = True
+    pca_comps = 2 
+    pca_visualise = True
     run_lda = False
     k_means = False
     k_means_clusters = 3
@@ -260,7 +260,7 @@ if __name__ == '__main__':
         print(accent)
         mfcc = Mfcc(df=df, 
                     accent=accent, 
-                    limit=30000, 
+                    limit=200, 
                     test_size=1, 
                     target_size=target_size, 
                     mfcc_size=mfcc_size, 
@@ -384,9 +384,9 @@ if __name__ == '__main__':
 
         if pca_visualise:
             fig = plt.figure()
-            ax = fig.add_subplot(projection='3d')
-            scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], x_train_pca[:,2], c=y_train)
-            legend1 = ax.legend(*scatter.legend_elements(), loc="lower left", title="Classes")
+            ax = fig.add_subplot()
+            scatter = ax.scatter(x_train_pca[:,0], x_train_pca[:,1], c=y_train)
+            legend1 = ax.legend(*scatter.legend_elements(), loc="upper right", title="Classes")
             ax.add_artist(legend1)
             plt.show()
 
@@ -401,7 +401,7 @@ if __name__ == '__main__':
                 figure = py_go.Figure(data=data, layout=layout)
                 py_o.iplot(figure)
 
-            interactive_3d_plot(x_train_pca, names)
+            #interactive_3d_plot(x_train_pca, names)
 
     # --- LDA
     if run_lda:
@@ -425,9 +425,9 @@ if __name__ == '__main__':
         # ax.add_artist(legend1)
         # plt.show()
 
-    np.save(f'mfccs/X_train_moz.npy', X_train_std)
-    np.save(f'mfccs/X_test_moz.npy', X_test_std)
-    np.save(f'mfccs/X_val_moz.npy', X_val_std)
-    np.save(f'mfccs/y_train_moz.npy', y_train)
-    np.save(f'mfccs/y_test_moz.npy', y_test)
-    np.save(f'mfccs/y_val_moz.npy', y_val)
+    # np.save(f'mfccs/X_train_moz.npy', X_train_std)
+    # np.save(f'mfccs/X_test_moz.npy', X_test_std)
+    # np.save(f'mfccs/X_val_moz.npy', X_val_std)
+    # np.save(f'mfccs/y_train_moz.npy', y_train)
+    # np.save(f'mfccs/y_test_moz.npy', y_test)
+    # np.save(f'mfccs/y_val_moz.npy', y_val)

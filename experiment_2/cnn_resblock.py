@@ -16,18 +16,18 @@ import matplotlib.pyplot as plt
 # config.gpu_options.allow_growth = True
 # session = InteractiveSession(config=config)
 
-gpus = tf.config.experimental.list_physical_devices('GPU')
-if gpus:
-  # Restrict TensorFlow to only allocate 2GB of memory on the first GPU
-  try:
-    tf.config.experimental.set_virtual_device_configuration(
-        gpus[0],
-        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2048)])
-    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-  except RuntimeError as e:
-    # Virtual devices must be set before GPUs have been initialized
-    print(e)
+# gpus = tf.config.experimental.list_physical_devices('GPU')
+# if gpus:
+#   # Restrict TensorFlow to only allocate 2GB of memory on the first GPU
+#   try:
+#     tf.config.experimental.set_virtual_device_configuration(
+#         gpus[0],
+#         [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2048)])
+#     logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+#     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+#   except RuntimeError as e:
+#     # Virtual devices must be set before GPUs have been initialized
+#     print(e)
 
 data = "moz"
 #data = "moz_small"
@@ -121,9 +121,6 @@ def create_res_net():
     t = basic_residual_stack(t, filters=16)
     t = basic_residual_stack(t, filters=16)
     t = Dropout(0.2)(t)
-    t = basic_residual_stack(t, filters=16)
-    t = basic_residual_stack(t, filters=16)
-    t = Dropout(0.2)(t)
     t = basic_residual_stack(t, filters=num_filters)
     # t = Dropout(0.5)(t)
     
@@ -166,7 +163,7 @@ def create_res_net():
 model = create_res_net()
 
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
-history = model.fit(X_train, y_train_hot, batch_size=64, epochs=50, verbose=1,
+history = model.fit(X_train, y_train_hot, batch_size=64, epochs=100, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
 
 

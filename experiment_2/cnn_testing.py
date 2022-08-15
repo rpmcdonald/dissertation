@@ -27,7 +27,7 @@ mfcc_shape = 39
 length = 192
 classes = 2
 
-X_train = np.load(f'mfcc/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
+X_train = np.load(f'mfccs/X_train_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 X_test = np.load(f'mfccs/X_test_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 X_val = np.load(f'mfccs/X_val_{data}.npy').reshape(-1, mfcc_shape, length, 1)
 y_train = np.load(f'mfccs/y_train_{data}.npy')
@@ -43,35 +43,25 @@ y_val_hot = to_categorical(y_val, num_classes=classes)
 callbacks = [TensorBoard(log_dir='./logs')]
 
 model = Sequential()
-model.add(Conv2D(16, (3, 3), input_shape=(mfcc_shape, length, 1)))
-model.add(BatchNormalization())
+model.add(Conv2D(32, (3, 3), input_shape=(mfcc_shape, length, 1)))
 model.add(LeakyReLU())
-model.add(Conv2D(16, (3, 3), strides=2))
-model.add(BatchNormalization())
+model.add(Conv2D(32, (3, 3)))
 model.add(LeakyReLU())
+model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Dropout(0.5))
 
-model.add(Conv2D(16, (3, 3)))
-model.add(BatchNormalization())
+model.add(Conv2D(32, (3, 3)))
 model.add(LeakyReLU())
-model.add(Conv2D(32, (3, 3), strides=2)) #remove stride?
-model.add(BatchNormalization())
+model.add(Conv2D(64, (3, 3)))
 model.add(LeakyReLU())
+model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
-model.add(GlobalMaxPool2D())
 
-model.add(Flatten())
-model.add(Dense(256))
-model.add(LeakyReLU())
-model.add(Dense(128))
-model.add(LeakyReLU())
+model.add(Flatten())  
 model.add(Dense(64))
 model.add(LeakyReLU())
-model.add(Dense(16))
-model.add(LeakyReLU())
 model.add(Dropout(0.5))
-model.add(Dense(classes))
-#model.add(Activation('softmax'))
+model.add(Dense(2))
 model.add(Activation('sigmoid'))
 
 print(model.summary())
@@ -80,15 +70,10 @@ model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adam(lr=0.001),
               metrics=['accuracy'])
 
-# model.compile(loss=keras.losses.categorical_crossentropy,
-#               optimizer=keras.optimizers.Adagrad(lr=0.01),
-#               metrics=['accuracy'])
-
 print(X_train.shape, y_train_hot.shape, X_val.shape, y_val_hot.shape)
 
 history = model.fit(X_train, y_train_hot, batch_size=128, epochs=300, verbose=1,
             validation_data=(X_val, y_val_hot), callbacks=callbacks)
-
 
 training_loss = history.history['loss']
 test_loss = history.history['val_loss']
