@@ -8,18 +8,18 @@ from sklearn.metrics import confusion_matrix
 import numpy as np
 import matplotlib.pyplot as plt
 
-# gpus = tf.config.experimental.list_physical_devices('GPU')
-# if gpus:
-#   # Restrict TensorFlow to only allocate 2GB of memory on the first GPU
-#   try:
-#     tf.config.experimental.set_virtual_device_configuration(
-#         gpus[0],
-#         [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2048)])
-#     logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-#     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-#   except RuntimeError as e:
-#     # Virtual devices must be set before GPUs have been initialized
-#     print(e)
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 2GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2048)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
 
 data = "moz"
 #data = "moz_small"
@@ -44,21 +44,27 @@ callbacks = [TensorBoard(log_dir='./logs')]
 
 model = Sequential()
 model.add(Conv2D(32, (3, 3), input_shape=(mfcc_shape, length, 1)))
+model.add(BatchNormalization())
 model.add(LeakyReLU())
-model.add(Conv2D(32, (3, 3)))
+model.add(Conv2D(32, (3, 3), strides=2))
+model.add(BatchNormalization())
 model.add(LeakyReLU())
-model.add(MaxPooling2D(pool_size=(3, 3)))
+#model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Dropout(0.5))
 
 model.add(Conv2D(32, (3, 3)))
+model.add(BatchNormalization())
 model.add(LeakyReLU())
-model.add(Conv2D(64, (3, 3)))
+model.add(Conv2D(64, (3, 3), strides=2))
+model.add(BatchNormalization())
 model.add(LeakyReLU())
-model.add(MaxPooling2D(pool_size=(2, 2)))
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(GlobalMaxPool2D())
 model.add(Dropout(0.25))
 
 model.add(Flatten())  
 model.add(Dense(64))
+model.add(BatchNormalization())
 model.add(LeakyReLU())
 model.add(Dropout(0.5))
 model.add(Dense(2))
