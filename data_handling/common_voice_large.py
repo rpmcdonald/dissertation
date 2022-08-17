@@ -23,7 +23,6 @@ import random
 import sys
 import math
 
-
 def clean_df(file):
     df = pd.read_csv(file, sep='\t')
     output_df = pd.DataFrame()
@@ -120,6 +119,8 @@ class Mfcc():
         hop_length=512
         win_length=2048
         # defaults n_fft=2048 hop_length=512 win_length=2048
+        #print(sr)
+        #sys.exit("end")
         mfcc = librosa.feature.mfcc(y=wave, sr=sr, n_mfcc=13, win_length=win_length, hop_length=hop_length, n_fft=n_fft) # format is (n_mfcc, )
         delta = librosa.feature.delta(mfcc)
         d_delta = librosa.feature.delta(mfcc, order=2)
@@ -165,6 +166,7 @@ class Mfcc():
         combined = []
         for i in range(len(self.list_of_mfccs)):
             comb = np.concatenate((self.list_of_mfccs[i], self.list_of_deltas[i], self.list_of_d_deltas[i]))
+            print(len(comb[0]))
             if comb.shape[1] < target_size: # This will remove anything which is smaller than the target size so it isn't padded with zeroes
                 pass
             else:
