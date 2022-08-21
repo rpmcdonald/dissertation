@@ -1,3 +1,4 @@
+from stringprep import c22_specials
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow import Tensor
@@ -16,21 +17,21 @@ import matplotlib.pyplot as plt
 # config.gpu_options.allow_growth = True
 # session = InteractiveSession(config=config)
 
-# gpus = tf.config.experimental.list_physical_devices('GPU')
-# if gpus:
-#   # Restrict TensorFlow to only allocate 2GB of memory on the first GPU
-#   try:
-#     tf.config.experimental.set_virtual_device_configuration(
-#         gpus[0],
-#         [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2048)])
-#     logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-#     print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-#   except RuntimeError as e:
-#     # Virtual devices must be set before GPUs have been initialized
-#     print(e)
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 2GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
 
 data = "moz"
-#data = "moz_small"
+data = "moz_small"
 mfcc_shape = 39
 length = 192
 classes = 2
@@ -88,17 +89,17 @@ def residual_stack(input, filters):
     return add3
 
 def basic_residual_stack(input, filters):
-    # IS THIS PART RIGHT?
     input_c = Conv2D(filters, 1, dilation_rate=1, padding="same")(input)
 
     c1 = Conv2D(filters, 3, dilation_rate=1, padding="same")(input)
     lrelu1 = leaky_relu_bn(c1)
     c2 = Conv2D(filters, 3, dilation_rate=3, padding="same")(lrelu1)
-    #lrelu2 = leaky_relu_bn(c2)
-    add1 = Add()([c2, input_c])
+    lrelu2 = leaky_relu_bn(c2)
+    add1 = Add()([lrelu2, input_c])
     return_relu = leaky_relu_bn(add1)
 
     return return_relu
+
 
 def create_res_net():
     
@@ -111,32 +112,26 @@ def create_res_net():
                padding="same")(inputs)
     t = leaky_relu_bn(t)
     #t = MaxPooling2D(pool_size=(3, 3))(t)
-    t = Dropout(0.5)(t)
+    t = Dropout(0.4)(t)
     # POOL HERE?
     
     # t = residual_stack(t, filters=num_filters)
     t = basic_residual_stack(t, filters=16)
+    t = Dropout(0.15)(t)
     t = basic_residual_stack(t, filters=16)
-    t = Dropout(0.2)(t)
+    t = Dropout(0.15)(t)
     t = basic_residual_stack(t, filters=16)
-    t = basic_residual_stack(t, filters=16)
-    t = Dropout(0.2)(t)
+    t = Dropout(0.15)(t)
     t = basic_residual_stack(t, filters=num_filters)
     # t = Dropout(0.5)(t)
     
 
     t = GlobalMaxPool2D()(t) # or avg
     t = Flatten()(t)
-    t = Dense(256)(t)
-    t = LeakyReLU()(t)
-    t = Dense(128)(t)
-    t = LeakyReLU()(t)
     t = Dense(64)(t)
-    t = LeakyReLU()(t)
-    t = Dense(16)(t)
-    t = LeakyReLU()(t)
+    t = leaky_relu_bn(t)
     t = Dropout(0.5)(t)
-    outputs = Dense(classes, activation='softmax')(t)
+    outputs = Dense(classes, activation='sigmoid')(t)
     
     model = Model(inputs, outputs)
 
@@ -203,11 +198,11 @@ plt.show()
 print(model.summary())
 
 # Test
-results = model.evaluate(X_test, y_test_hot, batch_size=128)
+results = model.evaluate(X_test, y_test_hot, batch_size=64)
 print("test loss, test acc:", results)
 
-# y_predict = model.predict(X_test)
-# y_classes = y_predict.argmax(axis=-1)
-# y_test = np.ravel(y_test)
-# cm = confusion_matrix(y_test, y_classes)
-# print(f'Confusion Matrix: \n{cm}')
+y_predict = model.predict(X_test)
+y_classes = y_predict.argmax(axis=-1)
+y_test = np.ravel(y_test)
+cm = confusion_matrix(y_test, y_classes)
+print(f'Confusion Matrix: \n{cm}')
